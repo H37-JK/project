@@ -1,7 +1,7 @@
 from celery import Celery
 from datetime import timedelta
 
-app = Celery(
+app = Celery (
     'monitor_app',
     broker='redis://localhost:6379/0',
     backend='redis://localhost:6379/0',
