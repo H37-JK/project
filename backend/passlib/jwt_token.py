@@ -39,10 +39,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], sessio
         user_id = payload.get("id")
         if user_id is None:
             raise credentials_exception
-        token_data = TokenData(id = user_id)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(session, token_data.id)
+    user = get_user(session, user_id)
     if user is None:
         raise credentials_exception
     return user

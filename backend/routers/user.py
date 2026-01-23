@@ -16,13 +16,17 @@ router = APIRouter (
     responses = {404: {"description" : "Not Found"}}
 )
 
+@router.get("/get/{id}")
+async def get_user(session: SessionDep, id: int):
+    return session.exec(select(User).where(User.id == id)).one_or_none()
 
-@router.get("/")
-async def read_users(session: SessionDep):
+
+@router.get("/get/users")
+async def get_users(session: SessionDep):
     return session.exec(select(User)).all()
 
-@router.get("/me", response_model = User)
-async def read_me (
+@router.get("/get/me", response_model = User)
+async def get_me (
     current_user: Annotated[User, Depends(get_current_user)]
 ):
     return current_user
@@ -50,10 +54,10 @@ async def login_for_access_token (
         )
     data = {"id": user.id}
     access_token = create_access_token(data)
-    return Token(access_token = access_token, token_type = "bearer")
+    return Token(access_token = access_token, token_type = "Bearer")
 
 
-@router.post("/create", response_model = User, response_model_exclude = {"password"})
+@router.post("/create/user", response_model = User, response_model_exclude = {"password"})
 async def create_user(user: User, session: SessionDep) -> User:
     user.password = encode_password(user.password)
     session.add(user)
@@ -61,7 +65,5 @@ async def create_user(user: User, session: SessionDep) -> User:
     session.refresh(user)
     return user
 
-@router.get("/{user_id}")
-async def read_user(session: SessionDep, user_id: int):
-    return session.exec(select(User).where(User.id == user_id)).one_or_none()
+
 

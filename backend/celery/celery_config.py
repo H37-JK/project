@@ -8,7 +8,7 @@ app = Celery (
     include=['backend.celery.tasks']
 )
 
-app.conf.update(
+app.conf.update (
     result_expires=3600,
     timezone='Asia/Seoul',
 )

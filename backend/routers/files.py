@@ -4,7 +4,7 @@ from typing import Annotated
 router = APIRouter (
     prefix = "/files",
     tags = ["files"],
-    responses = {404: {"페이지": "찾을 수 없습니다"}},
+    responses = {404: {"페이지": "찾을 수 없습니다."}},
 )
 
 @router.post("/files")

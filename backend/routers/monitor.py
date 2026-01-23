@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from backend.model import Monitor
+from backend.model.monitor import Monitor
 from backend.db.engine import SessionDep
 from backend.model.user import User
 from backend.passlib.jwt_token import get_current_user
@@ -13,8 +13,8 @@ router = APIRouter (
     responses = {404: {"description" : "Not Found"}}
 )
 
-@router.post("/register")
-async def register (
+@router.post("/create/monitor")
+async def create_monitor (
     monitor: Monitor,
     current_user: Annotated[User, Depends(get_current_user)],
     session: SessionDep

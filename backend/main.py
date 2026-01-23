@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.db.engine import create_db_and_tables
-from backend.routers import files
 from backend.routers import user
+from backend.routers import api
+from backend.routers import files
 from backend.routers import db
 from backend.routers import monitor
 
@@ -25,6 +26,7 @@ app.add_middleware (
 )
 
 app.include_router(user.router)
+app.include_router(api.router)
 app.include_router(files.router)
 app.include_router(db.router)
 app.include_router(monitor.router)
