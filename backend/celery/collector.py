@@ -5,7 +5,7 @@ from sqlmodel import select
 
 from backend.celery.tasks import save_monitor_result_task
 from backend.db.engine import get_context_session
-from backend.model import Monitor
+from backend.model.monitor import Monitor
 
 
 async def run_collector_for_server(server):

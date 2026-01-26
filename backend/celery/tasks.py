@@ -4,7 +4,7 @@ import json
 import asyncssh
 from sqlmodel import select
 
-from backend.model import Monitor
+from backend.model.monitor import Monitor
 from backend.db.engine import SessionDep, get_context_session
 from backend.celery.celery_config import app
 from celery.utils.log import get_task_logger
