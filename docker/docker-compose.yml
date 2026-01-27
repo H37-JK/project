@@ -97,7 +97,7 @@ services:
     volumes:
       - ./promtail-config.yaml:/etc/promtail/config.yml
       - /var/run/docker.sock:/var/run/docker.sock
-      - ../backend/logs:/mnt/backend_logs:ro # 로컬 백엔드 로그 폴더 마운트
+      - ../backend/logs:/mnt/backend_logs:ro
     command: -config.file=/etc/promtail/config.yml
     networks:
       - app-network

@@ -1,0 +1,34 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # docker-compose.yml 파일에 "logging=promtail" 라벨이 붙은 모든 컨테이너의 로그를 수집합니다.
+  # 현재 backend와 frontend 컨테이너가 해당됩니다.
+  - job_name: containers
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_label_logging']
+        regex: 'promtail'
+        action: keep
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+
+  # 로컬 backend/logs 디렉토리에 있는 .log 파일들을 수집합니다.
+  # docker-compose.yml에서 ../backend/logs:/mnt/backend_logs 로 마운트했습니다.
+  - job_name: backend-log-files
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: backend-files
+          __path__: /mnt/backend_logs/**/*.log
