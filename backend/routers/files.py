@@ -1,24 +1,46 @@
-from fastapi import APIRouter, File, UploadFile
 from typing import Annotated
+
+from fastapi import APIRouter, UploadFile, Depends
+
+from backend.db.engine import SessionDep
+from backend.logs.logging_route import LoggingRoute
+import shutil
+
+from backend.model.file import File
+from backend.model.user import User
+from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (
     prefix = "/files",
     tags = ["files"],
     responses = {404: {"페이지": "찾을 수 없습니다."}},
+    route_class = LoggingRoute,
 )
 
-@router.post("/files")
-async def create_file(file: Annotated[bytes | None, File()] = None):
-    if not file:
-        return {"message": "파일이 전송 되지 않았습니다."}
-    else:
-        return {"file_size": len(file)}
-
+UPLOAD_DIR = "uploads"
+BASEURL = "http://localhost:8000/files"
 
 @router.post("/upload/file/")
-async def create_upload_file(file: UploadFile | None = None):
-    if not file:
-        return {"message": "파일이 전송 되지 않았습니다."}
-    else:
-        return {"filename": file.filename}
+async def create_upload_file(
+    upload_file: UploadFile | None,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: SessionDep
+) -> File:
+    file_path = f"{UPLOAD_DIR}/{upload_file.filename}"
+
+    with open(file_path, "wb+") as file_object:
+        shutil.copyfileobj(upload_file.file, file_object)
+
+    file = File()
+    file.filename = upload_file.filename
+    file.content_type = upload_file.content_type
+    file.size = upload_file.size
+    file.url = f"{BASEURL}/{upload_file.filename}"
+    file.user_id = current_user.id
+
+    session.add(file)
+    session.commit()
+    session.refresh(file)
+
+    return file
 

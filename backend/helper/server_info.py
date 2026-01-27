@@ -5,9 +5,9 @@ import time
 
 import httpx
 import asyncwhois
-import whois
 import dns.resolver
 import warnings
+warnings.filterwarnings("ignore", message=".*pkg_resources.*")
 
 from datetime import datetime, timezone
 from urllib.parse import urlparse
@@ -20,8 +20,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
-
-warnings.filterwarnings("ignore", category=UserWarning, module='pkg_resources')
 
 TARGET_PORTS = [
     20, 21, 22, 23, 25, 53, 67, 68, 69, 80, 110, 119, 123, 143,

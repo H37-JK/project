@@ -16,4 +16,4 @@ class WebAnalyze(SQLModel, table = True):
     dns_record_info: str | None
     tech_stack_info: str | None
     user_id: int | None = Field(default = None, foreign_key = "user.id")
-    user: User | None  = Relationship(back_populates = "WebAnalyzes")
+    user: User | None  = Relationship(back_populates = "webAnalyzes")

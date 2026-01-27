@@ -9,6 +9,7 @@ from sqlmodel import select
 from backend.db.engine import SessionDep
 from backend.helper.server_info import extract_domain, get_server_info, get_ssl_info, get_headers_info, get_whois_info, \
     get_dns_records_info, get_server_status_info, get_port_status_info, get_tech_stack_info
+from backend.logs.logging_route import LoggingRoute
 from backend.model.user import User
 from backend.model.web_analyze import WebAnalyze
 from backend.passlib.jwt_token import get_current_user
@@ -16,7 +17,8 @@ from backend.passlib.jwt_token import get_current_user
 router = APIRouter (
     prefix = "/web_analyze",
     tags = ["/web_analyze"],
-    responses = {404: {"description" : "Not Found"}}
+    responses = {404: {"description" : "Not Found"}},
+    route_class = LoggingRoute,
 )
 
 @router.post("/create/web_analyze")

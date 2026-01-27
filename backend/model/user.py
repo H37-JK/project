@@ -10,4 +10,5 @@ class User(SQLModel, table = True):
     password: str
     name: str | None = Field(nullable = True)
     monitors: List["Monitor"] = Relationship(back_populates = "user")
-    WebAnalyzes: List["WebAnalyze"] = Relationship(back_populates= "user")
+    webAnalyzes: List["WebAnalyze"] = Relationship(back_populates= "user")
+    files: List["File"] = Relationship(back_populates = "user")

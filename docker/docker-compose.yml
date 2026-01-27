@@ -1,4 +1,6 @@
-version: '3.8'
+networks:
+  app-network:
+    driver: bridge
 
 services:
   db:
@@ -15,6 +17,8 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
   redis:
     image: redis:alpine
@@ -27,6 +31,8 @@ services:
     command: redis-server --appendonly yes
     environment:
       TZ: Asia/Seoul
+    networks:
+      - app-network
 
   backend:
     build: ../backend
@@ -41,10 +47,14 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ../backend:/app
-      - /app/.venv
+      - ../backend:/backend
+      - /backend/.venv
     depends_on:
       - db
+    networks:
+      - app-network
+    labels:
+      - "logging=promtail"
 
   frontend:
     build: ../frontend
@@ -60,7 +70,55 @@ services:
       - /app/.next
     depends_on:
       - backend
+    networks:
+      - app-network
+    labels:
+      - "logging=promtail"
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    restart: always
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - app-network
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    restart: always
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../backend/logs:/mnt/backend_logs:ro # 로컬 백엔드 로그 폴더 마운트
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./grafana-provisioning:/etc/grafana/provisioning
+      - grafana_storage:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - app-network
 
 volumes:
   db_data:
   redis_data:
+  loki_data:
+  grafana_storage:

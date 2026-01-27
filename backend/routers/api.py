@@ -2,12 +2,14 @@ from fastapi import APIRouter
 from sqlmodel import select
 
 from backend.db.engine import SessionDep
+from backend.logs.logging_route import LoggingRoute
 from backend.model.api import API
 
 router = APIRouter (
     prefix = "/api",
     tags = ["api"],
-    responses = {404: {"description": "Nou Found"}}
+    responses = {404: {"description": "Nou Found"}},
+    route_class = LoggingRoute,
 )
 
 @router.get("/get/apis")

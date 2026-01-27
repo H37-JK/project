@@ -2,6 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
+
+from backend.logs.logging_route import LoggingRoute
 from backend.model.user import User
 from backend.db.engine import SessionDep
 from backend.passlib.argon2 import encode_password, verify_password
@@ -13,23 +15,26 @@ from backend.passlib.jwt_token import get_current_user
 router = APIRouter (
     prefix = "/user",
     tags = ["user"],
-    responses = {404: {"description" : "Not Found"}}
+    responses = {404: {"description" : "Not Found"}},
+    route_class = LoggingRoute
 )
-
-@router.get("/get/{id}")
-async def get_user(session: SessionDep, id: int):
-    return session.exec(select(User).where(User.id == id)).one_or_none()
-
 
 @router.get("/get/users")
 async def get_users(session: SessionDep):
     return session.exec(select(User)).all()
+
+
+@router.get("/get/user/{id}")
+async def get_user(session: SessionDep, id: int):
+    return session.exec(select(User).where(User.id == id)).one_or_none()
+
 
 @router.get("/get/me", response_model = User)
 async def get_me (
     current_user: Annotated[User, Depends(get_current_user)]
 ):
     return current_user
+
 
 @router.get("/authenticate")
 async def authenticate(session: SessionDep, email: str, password: str):
@@ -39,6 +44,7 @@ async def authenticate(session: SessionDep, email: str, password: str):
     if not verify_password(password, user.password):
         return False
     return user
+
 
 @router.post("/token")
 async def login_for_access_token (

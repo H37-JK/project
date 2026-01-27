@@ -2,12 +2,14 @@ from fastapi import APIRouter
 from backend.db.engine import SessionDep
 from sqlmodel import text
 
+from backend.logs.logging_route import LoggingRoute
 from backend.query.schema_query import column_schema_query
 
 router = APIRouter (
     prefix = "/db",
     tags = ["db"],
-    responses = {404: {"description" : "Not Found"}}
+    responses = {404: {"description" : "Not Found"}},
+    route_class = LoggingRoute,
 )
 
 @router.post("/table_schema")

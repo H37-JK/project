@@ -1,13 +1,21 @@
-from contextlib import asynccontextmanager
-
+import time
+import uuid
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module='Wappalyzer')
 
-import httpx
+import traceback
+
+from contextlib import asynccontextmanager
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware import Middleware
 
+from backend.logs.logs import logger
+from backend.logs.logging_route import LoggingRoute
 from backend.db.engine import create_db_and_tables
 from backend.routers import user
 from backend.routers import api
@@ -15,6 +23,9 @@ from backend.routers import files
 from backend.routers import db
 from backend.routers import monitor
 from backend.routers import web_analyze
+from fastapi import Request
+
+warnings.filterwarnings("ignore", category=UserWarning, message="pkg_resources is deprecated as an API.")
 
 origins = [
     "*"
@@ -36,7 +47,7 @@ middleware = [
     )
 ]
 
-app = FastAPI(middleware = middleware, lifespan = lifespan)
+app = FastAPI(middleware = middleware, lifespan = lifespan, route_class = LoggingRoute)
 
 app.include_router(user.router)
 app.include_router(api.router)
@@ -45,12 +56,26 @@ app.include_router(db.router)
 app.include_router(monitor.router)
 app.include_router(web_analyze.router)
 
+app.mount("/files", StaticFiles(directory = "uploads"), name = "files")
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    error_details = exc.errors()
+    logger.error(f"잘못된 요청 데이터 (422 Unprocessable Entity) | {request.method} {request.url.path}")
+    logger.error(f"  > 클라이언트 IP: {request.client.host}")
+    logger.error(f"  > 오류 상세: {error_details}")
+    return JSONResponse(
+        status_code = 422,
+        content = {"detail": error_details},
+    )
 
-
-
-# @app.exception_handlers(StarletteHTTPException)
-# async def custom_http_exception_handler(request, exc):
-#     print(f"Http Error: {repr(exc)}")
-#     return await http_exception_handler(request, exc)
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    logger.error(f"예상치 못한 오류 발생 (500 Internal Server Error) | {request.method} {request.url.path}")
+    logger.error(f"  > 클라이언트 IP: {request.client.host}")
+    logger.error(f"  > Traceback: {traceback.format_exc()}")
+    return JSONResponse(
+        status_code = HTTP_500_INTERNAL_SERVER_ERROR,
+        content = {"message": "서버 내부 오류가 발생 했습니다. (Internal Server Error)"},
+    )
