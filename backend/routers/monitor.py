@@ -13,7 +13,6 @@ router = APIRouter (
     tags = ["monitor"],
     responses = {404: {"description" : "Not Found"}},
     route_class = LoggingRoute,
-
 )
 
 @router.post("/create/monitor")

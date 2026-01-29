@@ -3,21 +3,22 @@ import time
 import json
 import re
 import os
-from playwright.sync_api import sync_playwright
+import sys, asyncio
+from playwright.async_api import async_playwright
 import google.generativeai as genai
 from PIL import Image
 from backend.httpx.httpx_api import client
-# from playwright_stealth import stealth_sync
+from fastapi import WebSocket
+import pyperclip
 
 genai.configure(api_key = os.getenv("GEMINI_API_KEY"))
-
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-def save_image_from_element(element, filename):
+async def save_image_from_element(element, filename):
     try:
-        src = element.get_attribute("src")
+        src = await element.get_attribute("src")
         if not src:
-            src = element.get_attribute("href")
+            src = await element.get_attribute("href")
 
         if not src:
             print("❌ 이미지 주소(src)를 찾을 수 없습니다.")
@@ -32,12 +33,12 @@ def save_image_from_element(element, filename):
 
         elif src.startswith("http"):
             try:
-                with client.stream("GET", src) as response:
+                async with client.stream("GET", src) as response:
                     if response.status_code == 200:
                         with open(f"downloads/{filename}.jpg", "wb") as file:
                             for chunk in response.iter_bytes():
                                 file.write(chunk)
-                            print(f"💾 [HTTPX] 저장 완료: downloads/{filename}.jpg")
+                            print(f"💾 [HTTPX] 저장 완료: /downloads/{filename}.jpg")
                     else:
                         print(f"❌ 다운로드 실패 (상태 코드: {response.status_code})")
             except Exception as e:
@@ -51,14 +52,14 @@ def save_image_from_element(element, filename):
 
 
 
-def get_ai_next_action(goal, history, screenshot_path):
+def get_ai_next_action(prompt, history, screenshot_path):
     img = Image.open(screenshot_path)
 
     system_prompt = f"""
     너는 웹 브라우저 자동화 에이전트야.
     
     [사용자 목표]
-    "{goal}"
+    "{prompt}"
     
     [지금 까지의 행동 기록]
     {history}
@@ -89,8 +90,8 @@ def get_ai_next_action(goal, history, screenshot_path):
     return None
 
 
-def add_visual_tags(page):
-    page.evaluate("""() => {
+async def add_visual_tags(page):
+    await page.evaluate("""() => {
         document.querySelectorAll('.ai-label').forEach(element => element.remove());
         document.querySelectorAll('[data-ai-id]').forEach(element => {
             element.style.border = "";
@@ -98,13 +99,13 @@ def add_visual_tags(page):
         });
     }""")
 
-    elements = page.query_selector_all('a, button, input, textarea, img, [role="button"]')
+    elements = await page.query_selector_all('a[href], button, input, textarea, img')
     visible_elements = []
 
     for index, element in enumerate(elements):
-        if element.is_visible():
+        if await element.is_visible():
             visible_elements.append(element)
-            page.evaluate("""([element, index]) => {
+            await page.evaluate("""([element, index]) => {
                 element.style.border = "2px solid red";
                 element.setAttribute("data-ai-id", index);
                 
@@ -118,38 +119,52 @@ def add_visual_tags(page):
                 label.style.fontWeight = "bold";
                 label.style.zIndex = "10000";
                 
+                
                 const rect = element.getBoundingClientRect();
                 label.style.top = (rect.top + window.scrollY) + "px";
                 label.style.left = (rect.left + window.scrollX) + "px";
                 document.body.appendChild(label);
+                
+        
             }""", [element, len(visible_elements) - 1])
 
     return visible_elements
 
-def run_browser_agent(goal):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless = False)
-        page = browser.new_page()
-        stealth_sync
+async def run_browser_agent(prompt):
+    user_data_dir = "./user_data"
+    history = []
+    result = "failed"
+    async with async_playwright() as p:
+      try:
+        browser = await p.chromium.launch_persistent_context(
+            user_data_dir,
+            headless = False,
+            channel = "chrome",
+            args = [
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox"
+            ]
+        )
+        page = await browser.new_page()
 
-        history = []
-
-        for step in range(15):
+        for step in range(20):
             print(f"\n--- Step {step + 1} ---")
 
             try:
-                visible_elements = add_visual_tags(page)
+                visible_elements = await add_visual_tags(page)
             except:
                 visible_elements = []
 
             screenshot_path = "capture.png"
-            page.screenshot(path = screenshot_path)
-
+            await page.screenshot(path = screenshot_path)
+            screenshot_bytes = await page.screenshot()
+            img_str = base64.b64encode(screenshot_bytes).decode('utf-8')
+            # await websocket.send_text(img_str)
             print("🧠 생각 중...")
-            action_data = get_ai_next_action(goal, history, screenshot_path)
+            action_data = get_ai_next_action(prompt, history, screenshot_path)
 
             if not action_data:
-                print("❌ AI 응답 실패. 재시도합니다.")
+                print("❌ AI 응답 실패. 재시도 합니다.")
                 continue
 
             print(f"🤖 AI의 결정: {action_data}")
@@ -159,44 +174,91 @@ def run_browser_agent(goal):
             if action_type == "goto":
                 url = action_data.get("url")
                 print(f"🌐 이동: {url}")
-                page.goto(url)
-                history.append(f"Moved to {url}")
+                await page.goto(url)
+                history.append(f"{url}로 이동")
 
             elif action_type == "click":
                 index = int(action_data.get("index"))
+                before_browser_count = len(browser.pages)
                 if index < len(visible_elements):
                     print(f"🖱️ {index}번 요소 클릭")
-                    visible_elements[index].click()
-                    history.append(f"Clicked element {index}")
+                    await visible_elements[index].evaluate("element => element.click()")
+                    history.append(f"{index}번 요소 클릭")
+
+                    await asyncio.sleep(1)
+                    if len(browser.pages) > before_browser_count:
+                        print("새탭 감지")
+                        page = browser.pages[-1]
+                        await page.bring_to_front()
+                        await page.wait_for_load_state()
+                        history.append(f"{index}번 요소 클릭 (새 탭 전환됨)")
 
             elif action_type == "type":
                 index = int(action_data.get("index"))
                 text = action_data.get("text")
                 if index < len(visible_elements):
                     print(f"⌨️ {index}번 요소에 '{text}' 입력")
-                    visible_elements[index].fill(text)
-                    history.append(f"Typed '{text}' into element {index}")
+                    await visible_elements[index].click()
+                    pyperclip.copy(text)
+                    await page.keyboard.press("Control+v")
+                    # await visible_elements[index].fill(text)
+                    history.append(f"{index}번 요소에 {text} 입력")
 
             elif action_type == "download":
                 index = int(action_data.get("index"))
                 if index < len(visible_elements):
                     target_element = visible_elements[index]
                     filename = f"image_{int(time.time())}"
-                    save_image_from_element(target_element, filename)
-                    history.append(f"Downloaded image index {index}")
+                    await save_image_from_element(target_element, filename)
+                    history.append(f"{index}번 이미지 다운로드")
                 else:
-                    print("❌ 잘못된 인덱스입니다.")
+                    print("❌ 잘못된 인덱스 입니다.")
 
             elif action_type == "done":
                 print("🎉 목표 달성! 종료 합니다.")
+                history.append("🎉 success")
+                result = "success"
                 break
-            time.sleep(3)
+            await asyncio.sleep(1)
+      except Exception as e:
+        print(e)
+        history.append("failed")
+      # finally:
+      #     # if websocket:
+      #     #     try:
+      #     #         await websocket.send_text("STREAM_END")
+      #     #         await websocket.close()
+      #     #     except Exception as e:
+      #     #         print(f"소켓 종료 중 에러: {e}")
 
-        browser.close()
+
+      await browser.close()
+    return {
+        "result": result,
+        "history": history
+    }
+
+
+def agent_worker_thread(prompt: str):
+    if sys.platform.startswith("win"):
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(run_browser_agent(prompt))
+    finally:
+        try:
+            loop.run_until_complete(asyncio.sleep(0))
+        except Exception:
+            pass
+        loop.close()
+
 
 
 if __name__ == "__main__":
-    goal1 = "네이버로 가서 아이디 these9907, 비밀번호 star8903!!??로 로그인 해줘"
-    goal2 = "구굴로 가서 고양이 검색해서 아무 고양이 하나 이미지 다운 받아줘"
+    prompt1 = "네이버로 가서 아이디 these9907, 비밀번호 star8903!!??로 로그인 해줘"
+    prompt2 = "구글로 가서 고양이 검색해서 아무 고양이 하나 이미지 다운 받아줘"
+    prompt3 = "네이버로 이동해서 아이디 these9907, 비밀번호 star8903!!??로 로그인후 풍월량 공식 카페로 이동한 후, 아무 글이나 하나 작성해줘"
+    prompt4 = "유튜브로가서 these990703, star8903로 로그인하고 풍월량 공포 아무거나 틀어줘"
 
-    run_browser_agent(goal2)
+    asyncio.run(run_browser_agent(prompt3))

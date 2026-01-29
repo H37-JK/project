@@ -1,0 +1,11 @@
+<img id="browser-view" src="" style="border: 2px solid red; width: 800px; height: 600px;">
+
+<script>
+    const ws = new WebSocket("ws://localhost:8000/websocket/ws/view/1");
+    const img = document.getElementById("browser-view");
+
+    console.log(ws)
+    ws.onmessage = function(event) {
+        img.src = "data:image/png;base64," + event.data;
+    };
+</script>

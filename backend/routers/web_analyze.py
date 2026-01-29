@@ -27,7 +27,6 @@ async def create_web_analyze(
     current_user: Annotated[User, Depends(get_current_user)],
     session: SessionDep
 ):
-
     domain = extract_domain(web.domain)
     results = await asyncio.gather (
         get_server_info(domain),
@@ -47,14 +46,14 @@ async def create_web_analyze(
     web.user_id = current_user.id
     web.domain = domain
     web.ip = results[0].get("query", "Unknown")
-    web.server_info = json.dumps(results[0])
-    web.headers_info = json.dumps(results[1])
-    web.ssl_info = json.dumps(results[2])
-    web.dns_record_info = json.dumps(results[3])
-    web.server_status_info = json.dumps(results[4])
-    web.port_status_info = json.dumps(results[5])
-    web.tech_stack_info = json.dumps(results[6])
-    web.whois_info = json.dumps(results[7])
+    web.server_info = results[0]
+    web.headers_info = results[1]
+    web.ssl_info = results[2]
+    web.dns_record_info = results[3]
+    web.server_status_info = results[4]
+    web.port_status_info = results[5]
+    web.tech_stack_info = results[6]
+    web.whois_info = results[7]
 
     session.add(web)
     session.commit()

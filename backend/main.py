@@ -1,3 +1,6 @@
+import sys
+import asyncio
+import os
 import time
 import uuid
 import warnings
@@ -14,6 +17,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware import Middleware
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
 from backend.logs.logs import logger
 from backend.logs.logging_route import LoggingRoute
 from backend.db.engine import create_db_and_tables
@@ -23,6 +30,8 @@ from backend.routers import files
 from backend.routers import db
 from backend.routers import monitor
 from backend.routers import web_analyze
+from backend.routers import agent
+from backend.routers import websocket
 from fastapi import Request
 
 warnings.filterwarnings("ignore", category=UserWarning, message="pkg_resources is deprecated as an API.")
@@ -55,6 +64,8 @@ app.include_router(files.router)
 app.include_router(db.router)
 app.include_router(monitor.router)
 app.include_router(web_analyze.router)
+app.include_router(agent.router)
+app.include_router(websocket.router)
 
 app.mount("/files", StaticFiles(directory = "uploads"), name = "files")
 
@@ -79,3 +90,4 @@ async def generic_exception_handler(request: Request, exc: Exception):
         status_code = HTTP_500_INTERNAL_SERVER_ERROR,
         content = {"message": "서버 내부 오류가 발생 했습니다. (Internal Server Error)"},
     )
+
