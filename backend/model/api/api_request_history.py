@@ -1,0 +1,30 @@
+from uuid import UUID, uuid4
+from typing import Dict, Any
+
+from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlmodel import SQLModel, Field, Relationship
+from datetime import datetime
+from backend.helper.date import get_utc_now
+from backend.model.api.api_request import ApiRequest
+from backend.model.user import User
+
+
+class ApiRequestHistory(SQLModel, table = True):
+    id: UUID = Field(default = uuid4, primary_key = True)
+    method: str
+    url: str
+    header_sent: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
+    body_sent: Dict[str, Any] | None= Field(default = None, sa_column = Column(JSONB))
+    status_code: int
+    duration_ms: int
+    response_size: int
+    response_body: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
+    response_headers: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
+    error_message: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
+    api_request_id: UUID = Field(foreign_key = "api_request.id", ondelete = "CASCADE")
+    api_request: ApiRequest = Relationship(back_populates = "api_request_histories")
+    user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
+    user: User = Relationship(back_populates = "api_request_histories")
+    create_at: datetime  = Field(default_factory = get_utc_now)
+
