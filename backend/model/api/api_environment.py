@@ -9,7 +9,7 @@ from backend.model.user import User
 
 
 class ApiEnvironment(SQLModel, table = True):
-    id: UUID  = Field(default = uuid4, primary_key = True)
+    id: UUID  = Field(default_factory = uuid4, primary_key = True)
     name: str
     variables: Dict[str, Any] = Field(default_factory = dict, sa_type = JSONB)
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")

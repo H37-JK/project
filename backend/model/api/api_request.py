@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column
@@ -11,20 +11,21 @@ from backend.model.user import User
 
 
 class ApiRequest(SQLModel, table = True):
-    id: UUID = Field(default = uuid4, primary_key = True)
+    id: UUID = Field(default_factory = uuid4, primary_key = True)
     name: str
     method: str = Field(index = True)
     url: str
-    headers: List[Dict[str, any]] = Field(default = [], sa_column = Column(JSONB))
-    params: List[Dict[str, any]] = Field(default = [], sa_column =  Column(JSONB))
-    body_type: str = Field(default = "none")
-    body_content: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
-    auth_type: str = Field(default = "none")
-    auth_content: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
+    headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column = Column(JSONB))
+    params: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
+    body_type: str | None = Field(default_factory = None)
+    body_content: Dict[str, Any] | None = Field(default_factory = None, sa_column = Column(JSONB))
+    auth_type: str | None = Field(default_factory = None)
+    auth_content: Dict[str, Any] | None = Field(default_factory = None, sa_column = Column(JSONB))
     user_id:  UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_requests")
-    api_collection_id: str | None = Field(default = None, foreign_key = "api_collection.id", ondelete = "CASCADE")
+    api_collection_id: UUID | None = Field(default_factory = None, foreign_key = "apicollection.id", ondelete = "CASCADE")
     api_collection: ApiCollection | None = Relationship(back_populates = "api_requests")
+    api_request_history: Optional["ApiRequestHistory"] = Relationship(back_populates = "api_request", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     create_at: datetime  = Field(default_factory = get_utc_now)
     update_at: datetime  = Field(default_factory = get_utc_now)
 

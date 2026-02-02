@@ -7,7 +7,7 @@ from datetime import datetime
 from backend.helper.date import get_utc_now
 
 class WebAnalyze(SQLModel, table = True):
-    id: UUID = Field(default = uuid4, primary_key = True)
+    id: UUID = Field(default_factory = uuid4, primary_key = True)
     domain: str
     ip: str
     server_info: Dict[str, Any] = Field(default_factory = dict, sa_type = JSONB)

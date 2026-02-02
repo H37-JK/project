@@ -9,7 +9,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 class Agent(SQLModel, table = True):
-    id: UUID = Field(default = uuid4, primary_key = True)
+    id: UUID = Field(default_factory = uuid4, primary_key = True)
     prompt: str
     history:  List[str] = Field(default_factory = list, sa_column = Column(JSONB))
     result: str

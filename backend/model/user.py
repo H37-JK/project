@@ -7,7 +7,7 @@ from backend.helper.date import get_utc_now
 
 
 class User(SQLModel, table = True):
-    id: UUID = Field(default = uuid4, primary_key = True)
+    id: UUID = Field(default_factory = uuid4, primary_key = True)
     email: EmailStr = Field(index = True)
     password: str
     name: str | None = Field(nullable = True)
@@ -17,6 +17,8 @@ class User(SQLModel, table = True):
     api_environments: List["ApiEnvironment"] = Relationship(back_populates= "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     api_collections: List["ApiCollection"] = Relationship(back_populates= "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     api_requests: List["ApiRequest"] = Relationship(back_populates= "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    api_request_histories: List["ApiRequestHistory"] = Relationship(back_populates= "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     files: List["File"] = Relationship(back_populates = "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    file_collections: List["FileCollection"] = Relationship(back_populates = "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     create_at: datetime  = Field(default_factory = get_utc_now)
 

@@ -10,7 +10,7 @@ from datetime import datetime
 
 
 class Monitor(SQLModel, table = True):
-    id: UUID = Field(default = uuid4, primary_key = True)
+    id: UUID = Field(default_factory = uuid4, primary_key = True)
     host: str
     port: int
     username: str

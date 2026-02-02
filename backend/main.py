@@ -1,8 +1,5 @@
 import sys
-import asyncio
 import os
-import time
-import uuid
 import warnings
 
 import traceback
@@ -25,8 +22,12 @@ from backend.logs.logs import logger
 from backend.logs.logging_route import LoggingRoute
 from backend.db.engine import create_db_and_tables
 from backend.routers import user
-from backend.routers import api
-from backend.routers import files
+from backend.routers.api import api_requeset
+from backend.routers.api import api_collection
+from backend.routers.api import api_envirionment
+from backend.routers.api import api_request_history
+from backend.routers.file import file
+from backend.routers.file import file_collection
 from backend.routers import db
 from backend.routers import monitor
 from backend.routers import web_analyze
@@ -59,8 +60,12 @@ middleware = [
 app = FastAPI(middleware = middleware, lifespan = lifespan, route_class = LoggingRoute)
 
 app.include_router(user.router)
-app.include_router(api.router)
-app.include_router(files.router)
+app.include_router(api_requeset.router)
+app.include_router(api_collection.router)
+app.include_router(api_envirionment.router)
+app.include_router(api_request_history.router)
+app.include_router(file.router)
+app.include_router(file_collection.router)
 app.include_router(db.router)
 app.include_router(monitor.router)
 app.include_router(web_analyze.router)

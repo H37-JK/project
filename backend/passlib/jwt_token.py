@@ -21,6 +21,10 @@ def get_user(session: SessionDep, user_id: int):
 
 def create_access_token(data: dict):
     to_encode = data.copy()
+
+    if "id" in to_encode and not isinstance(to_encode["id"], str):
+        to_encode["id"] = str(to_encode["id"])
+
     expire = datetime.now() + timedelta(minutes = 30)
     to_encode.update({"exp": expire})
 

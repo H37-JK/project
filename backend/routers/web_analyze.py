@@ -1,8 +1,10 @@
 import asyncio
 import json
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic.v1 import UUID1
 from sentry_sdk.utils import json_dumps
 from sqlmodel import select
 
@@ -15,17 +17,34 @@ from backend.model.web_analyze import WebAnalyze
 from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (
-    prefix = "/web_analyze",
-    tags = ["/web_analyze"],
+    prefix = "/web-analyze",
+    tags = ["/web-analyze"],
     responses = {404: {"description" : "Not Found"}},
     route_class = LoggingRoute,
 )
 
-@router.post("/create/web_analyze")
-async def create_web_analyze(
-    web: WebAnalyze,
+@router.get("/get/web-analyzes")
+async def get_web_analyzes (
+    session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    session: SessionDep
+):
+    return session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id)).all()
+
+
+@router.get("/get/web-analyze/{id}")
+async def get_web_analyze (
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_user)],
+    id: UUID
+):
+    return session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_noe()
+
+
+@router.post("/create/web-analyze")
+async def create_web_analyze (
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_user)],
+    web: WebAnalyze,
 ):
     domain = extract_domain(web.domain)
     results = await asyncio.gather (
@@ -62,4 +81,38 @@ async def create_web_analyze(
     return web
 
 
+@router.patch("/update/web-analyze/{id}")
+async def update_web_analyze (
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_user)],
+    request_web_analyze: WebAnalyze,
+    id: UUID
+) -> WebAnalyze:
+    web_analyze = session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_noe()
+    if not web_analyze:
+        raise HTTPException(status_code = 404, detail = "Request not found")
 
+    update_data = request_web_analyze.model_dump(exclude_unset = True)
+    web_analyze.sqlmodel_update(update_data)
+
+    session.add(web_analyze)
+    session.commit()
+    session.refresh(web_analyze)
+
+    return web_analyze
+
+
+@router.delete("/delete/web-analyze/{id}")
+async def delete_web_analyze (
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_user)],
+    id: UUID
+):
+    web_analyze = session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_noe()
+    if not web_analyze:
+        raise HTTPException(status_code = 404, detail = "Request not found")
+
+    session.delete(web_analyze)
+    session.commit()
+
+    return None
