@@ -34,6 +34,14 @@ def extract_domain(domain: str):
     return urlparse(domain).netloc
 
 
+def extract_domain_http(domain: str):
+    if not domain.startswith("http"):
+        domain = f"http://{domain}"
+    else:
+        domain = domain
+    return domain
+
+
 def extract_domain_https(domain: str):
     if not domain.startswith("http"):
         domain = f"https://{domain}"

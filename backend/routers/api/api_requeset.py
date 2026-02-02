@@ -7,7 +7,7 @@ from sqlmodel import select
 from typing import Annotated
 
 from backend.helper.date import get_utc_now
-from backend.helper.server_info import extract_domain, extract_domain_https
+from backend.helper.server_info import extract_domain, extract_domain_https, extract_domain_http
 from backend.model.api.api_request_history import ApiRequestHistory
 from backend.model.user import User
 from backend.passlib.jwt_token import get_current_user
@@ -59,17 +59,17 @@ async def call_api_request (
     if not api_request:
       raise HTTPException(status_code = 404, detail = "Request not found")
 
-    url = extract_domain_https(api_request.url)
-    method = api_request.method
-    headers = build_options(api_request.headers)
-    params = build_options(api_request.params)
+    url = extract_domain_https(request_api_request.url)
+    method = request_api_request.method
+    headers = build_options(request_api_request.headers)
+    params = build_options(request_api_request.params)
 
 
     request_args = {}
-    if api_request.body_type == "json":
-        request_args["json"] = api_request.body_content
-    elif api_request.body_type == "x-www-form-urlencoded":
-        request_args["data"] = api_request.body_content
+    if request_api_request.body_type == "application/json":
+        request_args["json"] = request_api_request.body_content
+    elif request_api_request.body_type == "x-www-form-urlencoded":
+        request_args["data"] = request_api_request.body_content
 
     start_time = get_utc_now()
     response: httpx.Response | None = None

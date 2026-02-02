@@ -22,7 +22,7 @@ class ApiRequestHistory(SQLModel, table = True):
     response_body: Dict[str, Any] | None = Field(default_factory = None, sa_column = Column(JSONB))
     response_headers: Dict[str, Any] | None = Field(default_factory = None, sa_column =  Column(JSONB))
     error_message: Dict[str, Any] | None = Field(default_factory = None, sa_column =  Column(JSONB))
-    api_request_id: UUID = Field(foreign_key = "apirequest.id", ondelete = "CASCADE", sa_column_kwargs={"unique": True})
+    api_request_id: UUID = Field(foreign_key = "apirequest.id", ondelete = "CASCADE")
     api_request: ApiRequest = Relationship(back_populates = "api_request_history")
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_request_histories")

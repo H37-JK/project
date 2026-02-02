@@ -13,8 +13,8 @@ from backend.model.user import User
 class ApiRequest(SQLModel, table = True):
     id: UUID = Field(default_factory = uuid4, primary_key = True)
     name: str
-    method: str = Field(index = True)
-    url: str
+    method: str | None = Field(default_factory = None, index = True)
+    url: str | None = Field(default_factory = None)
     headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column = Column(JSONB))
     params: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
     body_type: str | None = Field(default_factory = None)
