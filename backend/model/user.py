@@ -1,9 +1,21 @@
 from pydantic import EmailStr
 from sqlmodel import SQLModel, Field, Relationship
-from typing import List
+from typing import List, TYPE_CHECKING
 from uuid import UUID, uuid4
 from datetime import datetime
 from backend.helper.date import get_utc_now
+
+if TYPE_CHECKING:
+    from .agent import Agent
+    from .monitor import Monitor
+    from .web_analyze import WebAnalyze
+    from .api.api_environment import ApiEnvironment
+    from .api.api_collection import ApiCollection
+    from .api.api_request import ApiRequest
+    from .api.api_request_history import ApiRequestHistory
+    from .file.file import File
+    from .file.file_collection import FileCollection
+
 
 
 class User(SQLModel, table = True):
@@ -22,6 +34,7 @@ class User(SQLModel, table = True):
     file_collections: List["FileCollection"] = Relationship(back_populates = "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     create_at: datetime  = Field(default_factory = get_utc_now)
     update_at: datetime  = Field(default_factory = get_utc_now)
+
 
 
 class UserCreate(SQLModel):

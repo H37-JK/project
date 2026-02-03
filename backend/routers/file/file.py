@@ -11,7 +11,7 @@ from backend.logs.logging_route import LoggingRoute
 import shutil
 import os
 
-from backend.model.fle.file import File, FileCreateResponse, FileUpdateResponse, FileUpdate
+from backend.model.file.file import File, FileCreateResponse, FileUpdateResponse, FileUpdate
 from backend.model.user import User
 from backend.passlib.jwt_token import get_current_user
 

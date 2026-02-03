@@ -5,7 +5,7 @@ from backend.logs.logging_route import LoggingRoute
 from fastapi import APIRouter, UploadFile, Depends, HTTPException
 from sqlmodel import select
 
-from backend.model.fle.file_collection import FileCollection, FileCollectionCreateResponse, FileCollectionCreate, \
+from backend.model.file.file_collection import FileCollection, FileCollectionCreateResponse, FileCollectionCreate, \
     FileCollectionUpdateResponse, FileCollectionUpdate
 from backend.model.user import User
 from backend.passlib.jwt_token import get_current_user

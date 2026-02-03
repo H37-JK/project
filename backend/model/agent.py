@@ -1,4 +1,3 @@
-from sqlmodel import SQLModel
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy.dialects.postgresql.json import JSONB
 from backend.model.user import User

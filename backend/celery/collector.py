@@ -1,11 +1,10 @@
 import asyncio
-
 import asyncssh
 from sqlmodel import select
 
 from backend.celery.tasks import save_monitor_result_task
 from backend.db.engine import get_context_session
-from backend.model.monitor import Monitor
+from backend.model import User, Agent, Monitor, WebAnalyze, ApiEnvironment, ApiCollection, ApiRequest, ApiRequestHistory, File, FileCollection
 
 
 async def run_collector_for_server(server):
@@ -44,7 +43,9 @@ async def run_collector_for_server(server):
 async def main():
     with get_context_session() as session:
         servers = session.exec(select(Monitor)).all()
-
     collect_tasks = [run_collector_for_server(server) for server in servers]
     await asyncio.gather(*collect_tasks)
 
+
+if __name__ == "__main__":
+    asyncio.run(main())

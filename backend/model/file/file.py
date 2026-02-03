@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 
 from backend.helper.date import get_utc_now
-from backend.model.fle.file_collection import FileCollection
+from backend.model.file.file_collection import FileCollection
 from backend.model.user import User
 from uuid import UUID, uuid4
 from datetime import datetime

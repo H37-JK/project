@@ -3,8 +3,8 @@ from datetime import timedelta
 
 app = Celery (
     'monitor_app',
-    broker='redis://localhost:6379/0',
-    backend='redis://localhost:6379/0',
+    broker='redis://127.0.0.1:6379/0',
+    backend='redis://127.0.0.1:6379/0',
     include=['backend.celery.tasks']
 )
 

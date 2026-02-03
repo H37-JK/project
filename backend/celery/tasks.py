@@ -62,6 +62,7 @@ def monitor_server_task(host, port, username, password = None, key_path = None):
 def schedule_monitoring_tasks():
     with get_context_session() as session:
         servers = session.exec(select(Monitor)).all()
+        print(servers)
         for server in servers:
             monitor_server_task.delay (
                 host = server.host,
