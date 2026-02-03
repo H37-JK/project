@@ -216,13 +216,13 @@ async def run_browser_agent(prompt):
 
             elif action_type == "done":
                 print("🎉 목표 달성! 종료 합니다.")
-                history.append("🎉 success")
-                result = "success"
+                history.append("🎉 성공")
+                result = "성공"
                 break
             await asyncio.sleep(1)
       except Exception as e:
         print(e)
-        history.append("failed")
+        history.append("실패")
       # finally:
       #     # if websocket:
       #     #     try:

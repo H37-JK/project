@@ -1,11 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
+from argon2 import hash_password
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
 
 from backend.logs.logging_route import LoggingRoute
-from backend.model.user import User
+from backend.model.user import User, UserCreate, UserUpdate, UserCreateResponse, UserUpdateResponse
 from backend.db.engine import SessionDep
 from backend.passlib.argon2 import encode_password, verify_password
 from backend.passlib.jwt_token import create_access_token
@@ -14,20 +15,19 @@ from fastapi.security import OAuth2PasswordRequestForm
 from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (
-    prefix = "/user",
     tags = ["user"],
-    responses = {404: {"description" : "Not Found"}},
+    responses = {404: {"description": "잘못된 경로 입니다."}},
     route_class = LoggingRoute
 )
 
-@router.get("/get/users")
+@router.get("/get/users", response_model_exclude = {"password"})
 async def get_users (
     session: SessionDep
 ):
     return session.exec(select(User)).all()
 
 
-@router.get("/get/user/{id}")
+@router.get("/get/user/{id}", response_model_exclude = {"password"})
 async def get_user (
     session: SessionDep,
     id: UUID
@@ -35,14 +35,14 @@ async def get_user (
     return session.exec(select(User).where(User.id == id)).one_or_none()
 
 
-@router.get("/get/me", response_model = User)
+@router.get("/get/me", response_model_exclude = {"password"})
 async def get_me (
     current_user: Annotated[User, Depends(get_current_user)]
 ):
     return current_user
 
 
-@router.get("/authenticate")
+@router.get("/authenticate", response_model_exclude = {"password"})
 async def authenticate (
     session: SessionDep,
     email: str,
@@ -73,11 +73,12 @@ async def login_for_access_token (
     return Token(access_token = access_token, token_type = "Bearer")
 
 
-@router.post("/create/user", response_model_exclude = {"password"})
+@router.post("/create/user", response_model = UserCreateResponse)
 async def create_user (
-    user: User,
+    user_create: UserCreate,
     session: SessionDep
-) -> User:
+):
+    user = User.model_validate(user_create)
     user.password = encode_password(user.password)
     session.add(user)
     session.commit()
@@ -85,24 +86,23 @@ async def create_user (
     return user
 
 
-@router.patch("/update/user", response_model_exclude = {"password"})
+@router.patch("/update/user", response_model = UserUpdateResponse)
 async def update_user (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    request_user: User,
+    user_update: UserUpdate,
 ):
-    user = session.exec(select(User).where(User.id == current_user.id)).one_or_noe()
-    if not user:
-        raise HTTPException(status_code = 404, detail = "Request not found")
+    update_data = user_update.model_dump(exclude_unset = True)
+    if "password" in update_data:
+        update_data["password"] = hash_password(update_data["password"])
 
-    update_data = request_user.model_dump(exclude_unset = True)
-    user.sqlmodel_update(update_data)
+    current_user.sqlmodel_update(update_data)
 
-    session.add(user)
+    session.add(current_user)
     session.commit()
-    session.refresh(user)
+    session.refresh(current_user)
 
-    return user
+    return current_user
 
 
 @router.patch("/delete/user")
@@ -110,14 +110,10 @@ async def delete_user (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)]
 ):
-    user = session.exec(select(User).where(User.id == current_user.id)).one_or_noe()
-    if not user:
-        raise HTTPException(status_code = 404, detail = "Request not found")
-
-    session.delete(user)
+    session.delete(current_user)
     session.commit()
 
-    return None
+    return True
 
 
 

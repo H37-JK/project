@@ -14,17 +14,30 @@ class ApiRequestHistory(SQLModel, table = True):
     id: UUID = Field(default_factory = uuid4, primary_key = True)
     method: str
     url: str
-    header_sent: Dict[str, Any] | None = Field(default_factory = None, sa_column = Column(JSONB))
-    body_sent: Dict[str, Any] | None= Field(default_factory = None, sa_column = Column(JSONB))
+    header_sent: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
+    body_sent: Dict[str, Any] | None= Field(default = None, sa_column = Column(JSONB))
     status_code: int
     duration_ms: int
     response_size: int
-    response_body: Dict[str, Any] | None = Field(default_factory = None, sa_column = Column(JSONB))
-    response_headers: Dict[str, Any] | None = Field(default_factory = None, sa_column =  Column(JSONB))
-    error_message: Dict[str, Any] | None = Field(default_factory = None, sa_column =  Column(JSONB))
+    response_body: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
+    response_headers: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
+    error_message: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
     api_request_id: UUID = Field(foreign_key = "apirequest.id", ondelete = "CASCADE")
     api_request: ApiRequest = Relationship(back_populates = "api_request_history")
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_request_histories")
     create_at: datetime  = Field(default_factory = get_utc_now)
+
+
+class ApiRequestHistoryResponse(SQLModel):
+    method: str
+    url: str
+    header_sent: Dict[str, Any] | None = Field(default = None)
+    body_sent: Dict[str, Any] | None = Field(default = None)
+    status_code: int
+    duration_ms: int
+    response_size: int
+    response_body: Dict[str, Any] | None = Field(default = None)
+    response_headers: Dict[str, Any] | None = Field(default = None)
+    error_message: Dict[str, Any] | None = Field(default = None)
 

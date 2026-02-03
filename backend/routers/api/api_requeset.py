@@ -8,19 +8,17 @@ from typing import Annotated
 
 from backend.helper.date import get_utc_now
 from backend.helper.server_info import extract_domain, extract_domain_https, extract_domain_http
-from backend.model.api.api_request_history import ApiRequestHistory
+from backend.model.api.api_request_history import ApiRequestHistory, ApiRequestHistoryResponse
 from backend.model.user import User
 from backend.passlib.jwt_token import get_current_user
 from backend.db.engine import SessionDep
 from backend.logs.logging_route import LoggingRoute
-from backend.model.api.api_request import ApiRequest
+from backend.model.api.api_request import ApiRequest, ApiRequestCreateResponse, ApiRequestCreate, ApiRequestCall
 from backend.httpx.httpx_api import get, post, patch, delete, client
-from backend.routers.api.api_request_history import create_api_request_history
 
 router = APIRouter (
-    prefix = "/api-request",
     tags = ["api-request"],
-    responses = {404: {"description": "Nou Found"}},
+    responses = {404: {"description": "잘못된 경로 입니다."}},
     route_class = LoggingRoute,
 )
 
@@ -49,27 +47,27 @@ async def get_api_request (
     return session.exec(select(ApiRequest).where(ApiRequest.id == id, ApiRequest.user_id == current_user.id)).one_or_none()
 
 
-@router.post("/call/api-request")
+@router.post("/call/api-request", response_model = ApiRequestHistoryResponse)
 async def call_api_request (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    request_api_request: ApiRequest,
-) -> ApiRequest:
-    api_request: ApiRequest = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == request_api_request.id)).one_or_none()
+    api_request_call: ApiRequestCall,
+):
+    api_request: ApiRequest = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == api_request_call.id)).one_or_none()
     if not api_request:
-      raise HTTPException(status_code = 404, detail = "Request not found")
+      raise HTTPException(status_code = 404, detail = "해당 API가 존재하지 않습니다.")
 
-    url = extract_domain_https(request_api_request.url)
-    method = request_api_request.method
-    headers = build_options(request_api_request.headers)
-    params = build_options(request_api_request.params)
+    url = extract_domain_https(api_request_call.url)
+    method = api_request_call.method
+    headers = build_options(api_request_call.headers)
+    params = build_options(api_request_call.params)
 
 
     request_args = {}
-    if request_api_request.body_type == "application/json":
-        request_args["json"] = request_api_request.body_content
-    elif request_api_request.body_type == "x-www-form-urlencoded":
-        request_args["data"] = request_api_request.body_content
+    if api_request_call.body_type == "application/json":
+        request_args["json"] = api_request_call.body_content
+    elif api_request_call.body_type == "x-www-form-urlencoded":
+        request_args["data"] = api_request_call.body_content
 
     start_time = get_utc_now()
     response: httpx.Response | None = None
@@ -95,20 +93,23 @@ async def call_api_request (
             response_body = response.json()
         except Exception:
             response_body = {"raw_content": response.text}
-    except httpx.RequestError as e:
-        error_message = {"error": f"Request failed: {e.__class__.__name__}", "detail": str(e)}
-        raise HTTPException(status_code = 500, detail = error_message)
-    except Exception as e:
-        error_message = {"error": f"An unexpected error occurred: {e.__class__.__name__}", "detail": str(e)}
-        raise HTTPException(status_code = 500, detail = error_message)
+    except httpx.HTTPStatusError as error:
+        status_code = error.response.status_code
+        try:
+            error_detail = error.response.json()
+        except:
+            error_detail = error.response.text
+        error_message= {"에러": f"{error.__class__.__name__}", "메시지": str(error_detail), "상태 코드": status_code}
+    except httpx.RequestError as error:
+        error_message = {"에러": f"Request failed: {error.__class__.__name__}", "detail": str(error), "상태 코드": 500}
     finally:
         end_time = get_utc_now()
         duration_ms = int((end_time - start_time).total_seconds() * 1000)
 
-    update_data = request_api_request.model_dump(exclude_unset = True)
+    update_data = api_request_call.model_dump(exclude_unset = True, exclude_none = True)
     api_request.sqlmodel_update(update_data)
 
-    api_request_history = ApiRequestHistory(
+    api_request_history = ApiRequestHistory (
         method = method.upper(),
         url = url,
         header_sent = headers,
@@ -124,48 +125,28 @@ async def call_api_request (
         user_id = current_user.id
     )
 
-    try:
-        session.add(api_request)
-        session.add(api_request_history)
-        session.commit()
-        session.refresh(api_request)
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code = 500, detail = f"DataBase Error: {e}")
+    session.add(api_request)
+    session.add(api_request_history)
+    session.commit()
+    session.refresh(api_request_history)
 
-    return api_request
+    return api_request_history
 
 
 
-@router.post("/create/api-request")
+@router.post("/create/api-request", response_model = ApiRequestCreateResponse)
 async def create_api_request (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    api_request: ApiRequest,
-) -> ApiRequest:
-    api_request.user_id = current_user.id
-    api_request.api_collection_id = None
-    session.add(api_request)
-    session.commit()
-    session.refresh(api_request)
-
-    return api_request
-
-
-@router.patch("/update/api-request/{id}")
-async def update_api_collection (
-    session: SessionDep,
-    current_user: Annotated[User, Depends(get_current_user)],
-    request_api_request: ApiRequest,
-    id: UUID
-) -> ApiRequest:
-    api_request = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == id)).one_or_noe()
-    if not api_request:
-        raise HTTPException(status_code = 404, detail = "Request not found")
-
-    update_data = request_api_request.model_dump(exclude_unset = True)
-    api_request.sqlmodel_update(update_data)
-
+    api_request_create: ApiRequestCreate,
+):
+    api_request = ApiRequest.model_validate (
+        api_request_create,
+        update={
+            "user_id": current_user.id,
+            "api_collection_id": None
+        }
+    )
     session.add(api_request)
     session.commit()
     session.refresh(api_request)
@@ -174,16 +155,37 @@ async def update_api_collection (
 
 
 @router.delete("/delete/api-request/{id}")
-async def delete_api_collection (
+async def delete_api_request (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
     id: UUID
 ):
-    api_request = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == id)).one_or_noe()
+    api_request = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == id)).one_or_none()
     if not api_request:
-        raise HTTPException(status_code = 404, detail = "Request not found")
+        raise HTTPException(status_code = 404, detail = "해당 API가 존재하지 않습니다.")
 
     session.delete(api_request)
     session.commit()
 
-    return None
+    return True
+
+
+# @router.patch("/update/api-request/{id}")
+# async def update_api_collection (
+#     session: SessionDep,
+#     current_user: Annotated[User, Depends(get_current_user)],
+#     request_api_request: ApiRequest,
+#     id: UUID
+# ) -> ApiRequest:
+#     api_request = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == id)).one_or_none()
+#     if not api_request:
+#         raise HTTPException(status_code = 404, detail = "Request not found")
+#
+#     update_data = request_api_request.model_dump(exclude_unset = True)
+#     api_request.sqlmodel_update(update_data)
+#
+#     session.add(api_request)
+#     session.commit()
+#     session.refresh(api_request)
+#
+#     return api_request

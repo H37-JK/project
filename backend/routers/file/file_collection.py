@@ -5,14 +5,14 @@ from backend.logs.logging_route import LoggingRoute
 from fastapi import APIRouter, UploadFile, Depends, HTTPException
 from sqlmodel import select
 
-from backend.model.fle.file_collection import FileCollection
+from backend.model.fle.file_collection import FileCollection, FileCollectionCreateResponse, FileCollectionCreate, \
+    FileCollectionUpdateResponse, FileCollectionUpdate
 from backend.model.user import User
 from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (
-    prefix = "/file-collection",
     tags = ["file-collection"],
-    responses = {404: {"페이지": "찾을 수 없습니다."}},
+    responses = {404: {"description": "잘못된 경로 입니다."}},
     route_class = LoggingRoute,
 )
 
@@ -33,13 +33,18 @@ async def get_file_collection (
     return session.exec(select(FileCollection).where(FileCollection.user_id == current_user.id, FileCollection.id == id)).one_or_none()
 
 
-@router.post("/create/file-collection")
+@router.post("/create/file-collection", response_model = FileCollectionCreateResponse)
 async def create_file_collection (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    file_collection: FileCollection
-) -> FileCollection:
-    file_collection.user_id = current_user.id
+    file_collection_create: FileCollectionCreate
+):
+    file_collection = FileCollection.model_validate (
+        file_collection_create,
+        update = {
+            "user_id": current_user.id
+        }
+    )
     session.add(file_collection)
     session.commit()
     session.refresh(file_collection)
@@ -47,18 +52,18 @@ async def create_file_collection (
     return file_collection
 
 
-@router.patch("/update/file-collection/{id}")
+@router.patch("/update/file-collection/{id}", response_model = FileCollectionUpdateResponse)
 async def update_file_collection (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    request_file_collection: FileCollection,
+    file_collection_update: FileCollectionUpdate,
     id: UUID,
-) -> FileCollection:
-    file_collection = session.exec(select(FileCollection).where(FileCollection.user_id == current_user.id, FileCollection.id == id)).one_or_noe()
+):
+    file_collection = session.exec(select(FileCollection).where(FileCollection.user_id == current_user.id, FileCollection.id == id)).one_or_none()
     if not file_collection:
-        raise HTTPException(status_code = 404, detail = "Request not found")
+        raise HTTPException(status_code = 404, detail = "해당 파일 컬렉션이 존재 하지 않습니다.")
 
-    update_data = request_file_collection.model_dump(exclude_unset = True)
+    update_data = file_collection_update.model_dump(exclude_unset = True)
     file_collection.sqlmodel_update(update_data)
 
     session.add(file_collection)
@@ -74,11 +79,11 @@ async def delete_file_collection (
     current_user: Annotated[User, Depends(get_current_user)],
     id: UUID,
 ):
-    file_collection = session.exec(select(FileCollection).where(FileCollection.user_id == current_user.id, FileCollection.id == id)).one_or_noe()
+    file_collection = session.exec(select(FileCollection).where(FileCollection.user_id == current_user.id, FileCollection.id == id)).one_or_none()
     if not file_collection:
-        raise HTTPException(status_code = 404, detail = "Request not found")
+        raise HTTPException(status_code = 404, detail = "해당 파일 컬렉션이 존재 하지 않습니다.")
 
     session.delete(file_collection)
     session.commit()
 
-    return None
+    return True

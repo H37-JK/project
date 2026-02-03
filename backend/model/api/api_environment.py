@@ -17,3 +17,26 @@ class ApiEnvironment(SQLModel, table = True):
     create_at: datetime  = Field(default_factory = get_utc_now)
     update_at: datetime  = Field(default_factory = get_utc_now)
 
+
+class ApiEnvironmentCreate(SQLModel):
+    name: str
+    variables: Dict[str, Any] = Field(default_factory = dict)
+
+
+class ApiEnvironmentCreateResponse(SQLModel):
+    id: UUID
+    name: str
+    variables: Dict[str, Any] = Field(default_factory = dict)
+    create_at: datetime
+
+
+class ApiEnvironmentUpdate(SQLModel):
+    name: str | None = Field(default = None)
+    variables: Dict[str, Any] | None = Field(default = None)
+
+
+class ApiEnvironmentUpdateResponse(SQLModel):
+    id: UUID
+    name: str
+    variables: Dict[str, Any] | None = Field(default = None)
+    update_at: datetime

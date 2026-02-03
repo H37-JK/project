@@ -4,7 +4,6 @@ from backend.websocket.connection_anager import manager
 from fastapi import WebSocketDisconnect
 
 router = APIRouter (
-    prefix = "/websocket",
     tags = ["websocket"],
     responses = {404: {"description" : "Not Found"}},
     route_class = LoggingRoute,

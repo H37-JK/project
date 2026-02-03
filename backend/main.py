@@ -8,9 +8,10 @@ from contextlib import asynccontextmanager
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware import Middleware
 
@@ -75,24 +76,61 @@ app.include_router(websocket.router)
 app.mount("/files", StaticFiles(directory = "uploads"), name = "files")
 
 
+@app.exception_handler(IntegrityError)
+async def integrity_exception_handler(request: Request, error: IntegrityError):
+    logger.error(f"데이터베이스 제약 조건 위반 | {request.method} {request.url.path}")
+    logger.error(f"  > 클라이언트 IP: {request.client.host}")
+    logger.error(f"  > 오류 메시지: {traceback.format_exc()}")
+    return JSONResponse (
+        status_code = status.HTTP_400_BAD_REQUEST,
+        content = {
+            "error_type": "IntegrityError",
+            "detail": "데이터 제약 조건 위반 입니다. (중복된 데이터나 잘못된 참조 입니다.)",
+            "trace": f"에러 상세: {traceback.format_exc()}",
+        }
+    )
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, error: SQLAlchemyError):
+    logger.error(f"기타 데이터베이스 오류 | {request.method} {request.url.path}")
+    logger.error(f"  > 클라이언트 IP: {request.client.host}")
+    logger.error(f"  > 오류 메시지: {traceback.format_exc()}")
+    return JSONResponse (
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content = {
+            "error_type": "기타 데이터베이스 오류",
+            "detail": "데이터베이스 작업 중 오류가 발생 하였습니다",
+            "trace": f"에러 상세: {traceback.format_exc()}",
+        }
+    )
+
+
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    error_details = exc.errors()
+async def validation_exception_handler(request: Request, error: RequestValidationError):
+    error_details = error.errors()
     logger.error(f"잘못된 요청 데이터 (422 Unprocessable Entity) | {request.method} {request.url.path}")
     logger.error(f"  > 클라이언트 IP: {request.client.host}")
-    logger.error(f"  > 오류 상세: {error_details}")
+    logger.error(f"  > 오류 메시지: {error_details}")
     return JSONResponse(
-        status_code = 422,
-        content = {"detail": error_details},
+        status_code = status.HTTP_422_UNPROCESSABLE_CONTENT,
+        content = {
+            "error_type": "클라이언트 오류",
+            "detail": "클라이언트 요청중 오류가 발생 하였습니다",
+            "trace": f"에러 상세: {traceback.format_exc()}",
+        }
     )
 
 @app.exception_handler(Exception)
-async def generic_exception_handler(request: Request, exc: Exception):
+async def generic_exception_handler(request: Request, error: Exception):
     logger.error(f"예상치 못한 오류 발생 (500 Internal Server Error) | {request.method} {request.url.path}")
     logger.error(f"  > 클라이언트 IP: {request.client.host}")
-    logger.error(f"  > Traceback: {traceback.format_exc()}")
+    logger.error(f"  > 오류 메시지: {traceback.format_exc()}")
     return JSONResponse(
-        status_code = HTTP_500_INTERNAL_SERVER_ERROR,
-        content = {"message": "서버 내부 오류가 발생 했습니다. (Internal Server Error)"},
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content = {
+            "error_type": "서버 내부 오류",
+            "detail": "서버 내부 오류가 발생 했습니다. (Internal Server Error)",
+            "trace": f"에러 상세: {traceback.format_exc()}",
+        }
     )
 

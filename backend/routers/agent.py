@@ -5,17 +5,17 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 
+from backend.helper.date import get_utc_now
 from backend.passlib.jwt_token import get_current_user
 from backend.model.user import User
 from backend.logs.logging_route import LoggingRoute
-from backend.model.agent import Agent
+from backend.model.agent import Agent, AgentCreateResponse, AgentCreate, AgentUpdateResponse, AgentUpdate
 from backend.db.engine import SessionDep
 from backend.agent.agent import agent_worker_thread
 
 router = APIRouter (
-    prefix = "/agent",
     tags = ["agent"],
-    responses = {404: {"description" : "Not Found"}},
+    responses = {404: {"description": "잘못된 경로 입니다."}},
     route_class = LoggingRoute,
 )
 
@@ -33,21 +33,27 @@ async def get_agent (
     current_user: Annotated[User, Depends(get_current_user)],
     id: UUID
 ):
-    return session.exec(select(Agent).where(Agent.user_id == current_user.id, Agent.id == id)).one_or_noe()
+    return session.exec(select(Agent).where(Agent.user_id == current_user.id, Agent.id == id)).one_or_none()
 
 
-@router.post("/create/agent")
+@router.post("/create/agent", response_model = AgentCreateResponse)
 async def create_agent (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    agent: Agent,
-) -> Agent:
+    agent_create: AgentCreate,
+):
     # user_websocket = manager.get_connection(current_user.id)
     loop = asyncio.get_running_loop()
-    response = await loop.run_in_executor(None, lambda: agent_worker_thread(agent.prompt))
+    response = await loop.run_in_executor(None, lambda: agent_worker_thread(agent_create.prompt))
     # manager.disconnect(current_user.id)
 
-    agent.user_id = current_user.id
+    agent = Agent.model_validate (
+        agent_create,
+        update = {
+            "user_id": current_user.id
+        }
+    )
+
     agent.history = response["history"]
     agent.result = response["result"]
     session.add(agent)
@@ -56,18 +62,19 @@ async def create_agent (
     return agent
 
 
-@router.patch("/update/agent/{id}")
+@router.patch("/update/agent/{id}", response_model = AgentUpdateResponse)
 async def update_agent (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    request_agent: Agent,
+    agent_update: AgentUpdate,
     id: UUID
 ) -> Agent:
-    agent = session.exec(select(Agent).where(Agent.user_id == current_user.id, Agent.id == id)).one_or_noe()
+    agent = session.exec(select(Agent).where(Agent.user_id == current_user.id, Agent.id == id)).one_or_none()
     if not agent:
-         raise HTTPException(status_code = 404, detail = "Request not found")
+         raise HTTPException(status_code = 404, detail = "해당 에이전트가 존재 하지 않습니다.")
 
-    update_data = request_agent.model_dump(exclude_unset = True)
+    update_data = agent_update.model_dump(exclude_unset = True, exclude_none = True)
+    update_data["update_at"] = get_utc_now()
     agent.sqlmodel_update(update_data)
 
     session.add(agent)
@@ -83,11 +90,11 @@ async def delete_agent (
     current_user: Annotated[User, Depends(get_current_user)],
     id: UUID
 ):
-    agent = session.exec(select(Agent).where(Agent.user_id == current_user.id, Agent.id == id)).one_or_noe()
+    agent = session.exec(select(Agent).where(Agent.user_id == current_user.id, Agent.id == id)).one_or_none()
     if not agent:
-        raise HTTPException(status_code = 404, detail = "Request not found")
+        raise HTTPException(status_code = 404, detail = "해당 에이전트가 존재 하지 않습니다.")
 
     session.delete(agent)
     session.commit()
 
-    return None
+    return True

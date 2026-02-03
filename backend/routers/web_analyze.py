@@ -13,13 +13,12 @@ from backend.helper.server_info import extract_domain, get_server_info, get_ssl_
     get_dns_records_info, get_server_status_info, get_port_status_info, get_tech_stack_info
 from backend.logs.logging_route import LoggingRoute
 from backend.model.user import User
-from backend.model.web_analyze import WebAnalyze
+from backend.model.web_analyze import WebAnalyze, WebAnalyzeCreateResponse, WebAnalyzeCreate
 from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (
-    prefix = "/web-analyze",
     tags = ["/web-analyze"],
-    responses = {404: {"description" : "Not Found"}},
+    responses = {404: {"description": "잘못된 경로 입니다."}},
     route_class = LoggingRoute,
 )
 
@@ -37,16 +36,16 @@ async def get_web_analyze (
     current_user: Annotated[User, Depends(get_current_user)],
     id: UUID
 ):
-    return session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_noe()
+    return session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_none()
 
 
-@router.post("/create/web-analyze")
+@router.post("/create/web-analyze", response_model = WebAnalyzeCreateResponse)
 async def create_web_analyze (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    web: WebAnalyze,
+    web_analyze_create: WebAnalyzeCreate,
 ):
-    domain = extract_domain(web.domain)
+    domain = extract_domain(web_analyze_create.domain)
     results = await asyncio.gather (
         get_server_info(domain),
         get_headers_info(domain),
@@ -58,42 +57,28 @@ async def create_web_analyze (
         get_whois_info(domain),
     )
 
+    web_analyze = WebAnalyze.model_validate (
+        web_analyze_create,
+        update = {
+            "user_id": current_user.id
+        }
+    )
+
     exist_web = session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.domain == domain)).one_or_none()
     if exist_web is not None:
         web = exist_web
 
-    web.user_id = current_user.id
-    web.domain = domain
-    web.ip = results[0].get("query", "Unknown")
-    web.server_info = results[0]
-    web.headers_info = results[1]
-    web.ssl_info = results[2]
-    web.dns_record_info = results[3]
-    web.server_status_info = results[4]
-    web.port_status_info = results[5]
-    web.tech_stack_info = results[6]
-    web.whois_info = results[7]
-
-    session.add(web)
-    session.commit()
-    session.refresh(web)
-
-    return web
-
-
-@router.patch("/update/web-analyze/{id}")
-async def update_web_analyze (
-    session: SessionDep,
-    current_user: Annotated[User, Depends(get_current_user)],
-    request_web_analyze: WebAnalyze,
-    id: UUID
-) -> WebAnalyze:
-    web_analyze = session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_noe()
-    if not web_analyze:
-        raise HTTPException(status_code = 404, detail = "Request not found")
-
-    update_data = request_web_analyze.model_dump(exclude_unset = True)
-    web_analyze.sqlmodel_update(update_data)
+    web_analyze.user_id = current_user.id
+    web_analyze.domain = domain
+    web_analyze.ip = results[0].get("query", "none")
+    web_analyze.server_info = results[0]
+    web_analyze.headers_info = results[1]
+    web_analyze.ssl_info = results[2]
+    web_analyze.dns_record_info = results[3]
+    web_analyze.server_status_info = results[4]
+    web_analyze.port_status_info = results[5]
+    web_analyze.tech_stack_info = results[6]
+    web_analyze.whois_info = results[7]
 
     session.add(web_analyze)
     session.commit()
@@ -108,11 +93,33 @@ async def delete_web_analyze (
     current_user: Annotated[User, Depends(get_current_user)],
     id: UUID
 ):
-    web_analyze = session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_noe()
+    web_analyze = session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_none()
     if not web_analyze:
-        raise HTTPException(status_code = 404, detail = "Request not found")
+        raise HTTPException(status_code = 404, detail = "해당 웹분석이 존재 하지 않습니다.")
 
     session.delete(web_analyze)
     session.commit()
 
-    return None
+    return True
+
+
+
+# @router.patch("/update/web-analyze/{id}")
+# async def update_web_analyze (
+#     session: SessionDep,
+#     current_user: Annotated[User, Depends(get_current_user)],
+#     request_web_analyze: WebAnalyze,
+#     id: UUID
+# ) -> WebAnalyze:
+#     web_analyze = session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.id == id)).one_or_none()
+#     if not web_analyze:
+#         raise HTTPException(status_code = 404, detail = "해당 웹분석이 존재 하지 않습니다.")
+#
+#     update_data = request_web_analyze.model_dump(exclude_unset = True)
+#     web_analyze.sqlmodel_update(update_data)
+#
+#     session.add(web_analyze)
+#     session.commit()
+#     session.refresh(web_analyze)
+#
+#     return web_analyze
