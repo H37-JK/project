@@ -9,8 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
-
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware import Middleware
@@ -34,6 +33,7 @@ from backend.routers import monitor
 from backend.routers import web_analyze
 from backend.routers import agent
 from backend.routers import websocket
+from backend.routers.auth import auth
 from fastapi import Request
 
 warnings.filterwarnings("ignore", category=UserWarning, message="pkg_resources is deprecated as an API.")
@@ -59,6 +59,7 @@ middleware = [
 ]
 
 app = FastAPI(middleware = middleware, lifespan = lifespan, route_class = LoggingRoute)
+app.add_middleware(SessionMiddleware, secret_key = os.getenv("SECRET_KEY")) #type: ignore
 
 app.include_router(user.router)
 app.include_router(api_requeset.router)
@@ -72,6 +73,7 @@ app.include_router(monitor.router)
 app.include_router(web_analyze.router)
 app.include_router(agent.router)
 app.include_router(websocket.router)
+app.include_router(auth.router)
 
 app.mount("/files", StaticFiles(directory = "uploads"), name = "files")
 

@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from argon2 import hash_password
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlmodel import select
 
 from backend.logs.logging_route import LoggingRoute
@@ -59,7 +59,8 @@ async def authenticate (
 @router.post("/login")
 async def login_for_access_token (
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    session: SessionDep
+    session: SessionDep,
+    response: Response
 ) -> Token:
     user = await authenticate(session, form_data.username, form_data.password)
     if not user:
@@ -70,6 +71,12 @@ async def login_for_access_token (
         )
     data = {"id": user.id}
     access_token = create_access_token(data)
+    response.set_cookie (
+        key = "access_token",
+        value = access_token,
+        httponly = True,
+        max_age = 3600,
+    )
     return Token(access_token = access_token, token_type = "Bearer")
 
 
