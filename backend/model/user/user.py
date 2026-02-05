@@ -5,24 +5,28 @@ from uuid import UUID, uuid4
 from datetime import datetime
 from backend.helper.date import get_utc_now
 
+
 if TYPE_CHECKING:
-    from .agent import Agent
-    from .monitor import Monitor
-    from .web_analyze import WebAnalyze
-    from .api.api_environment import ApiEnvironment
-    from .api.api_collection import ApiCollection
-    from .api.api_request import ApiRequest
-    from .api.api_request_history import ApiRequestHistory
-    from .file.file import File
-    from .file.file_collection import FileCollection
+    from backend.model.agent.agent import Agent
+    from backend.model.monitor.monitor import Monitor
+    from backend.model.web_analyze.web_analyze import WebAnalyze
+    from backend.model.api.api_environment import ApiEnvironment
+    from backend.model.api.api_collection import ApiCollection
+    from backend.model.api.api_request import ApiRequest
+    from backend.model.api.api_request_history import ApiRequestHistory
+    from backend.model.file.file import File
+    from backend.model.file.file_collection import FileCollection
+    from backend.model.database.database_server_info import DatabaseServerInfo
 
 
 
 class User(SQLModel, table = True):
     id: UUID = Field(default_factory = uuid4, primary_key = True)
     email: EmailStr = Field(index = True, unique = True)
-    password: str
+    password: str | None = Field(default = None)
     name: str
+    provider: str | None = Field(default = None)
+    provider_id: str | None = Field(default = None)
     agents: List["Agent"] = Relationship(back_populates = "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     monitors: List["Monitor"] = Relationship(back_populates = "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     web_analyzes: List["WebAnalyze"] = Relationship(back_populates= "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
@@ -32,7 +36,9 @@ class User(SQLModel, table = True):
     api_request_histories: List["ApiRequestHistory"] = Relationship(back_populates= "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     files: List["File"] = Relationship(back_populates = "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     file_collections: List["FileCollection"] = Relationship(back_populates = "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    database_server_infos: List["DatabaseServerInfo"] = Relationship(back_populates = "user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     create_at: datetime  = Field(default_factory = get_utc_now)
+    login_at: datetime   = Field(default_factory = get_utc_now)
     update_at: datetime  = Field(default_factory = get_utc_now)
 
 

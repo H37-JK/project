@@ -12,7 +12,7 @@ import shutil
 import os
 
 from backend.model.file.file import File, FileCreateResponse, FileUpdateResponse, FileUpdate
-from backend.model.user import User
+from backend.model.user.user import User
 from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (

@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, Field, Relationship
 
 from backend.helper.date import get_utc_now
 from backend.model.file.file_collection import FileCollection
-from backend.model.user import User
+from backend.model.user.user import User
 from uuid import UUID, uuid4
 from datetime import datetime
 
@@ -12,7 +12,7 @@ class File(SQLModel, table = True):
     content_type: str | None = Field(default = None)
     size: int | None = Field(default = None)
     url: str | None = Field(default = None)
-    file_collection_id: UUID | None = Field(default = None, foreign_key = "filecollection.id", ondelete = "CASCADE")
+    file_collection_id: UUID | None = Field(default = None, foreign_key = "file_collection.id", ondelete = "CASCADE")
     file_collection: FileCollection = Relationship(back_populates = "files")
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "files")

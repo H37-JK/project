@@ -7,10 +7,11 @@ from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime
 from backend.helper.date import get_utc_now
 from backend.model.api.api_request import ApiRequest
-from backend.model.user import User
+from backend.model.user.user import User
 
 
 class ApiRequestHistory(SQLModel, table = True):
+    __tablename__ = "api_request_history"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
     method: str
     url: str
@@ -22,7 +23,7 @@ class ApiRequestHistory(SQLModel, table = True):
     response_body: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
     response_headers: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
     error_message: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
-    api_request_id: UUID = Field(foreign_key = "apirequest.id", ondelete = "CASCADE")
+    api_request_id: UUID = Field(foreign_key = "api_request.id", ondelete = "CASCADE")
     api_request: ApiRequest = Relationship(back_populates = "api_request_history")
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_request_histories")

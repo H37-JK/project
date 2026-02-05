@@ -8,8 +8,7 @@ from fastapi import Depends, HTTPException, status
 from jwt.exceptions import InvalidTokenError
 from backend.db.engine import SessionDep
 from sqlmodel import select
-from backend.model.user import User
-from backend.schemas.token import TokenData
+from backend.model.user.user import User
 
 load_dotenv()
 
@@ -32,7 +31,10 @@ def create_access_token(data: dict):
     return encode_jwt
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep):
+async def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    session: SessionDep,
+):
     credentials_exception = HTTPException (
         status_code = status.HTTP_401_UNAUTHORIZED,
         detail = "Could not validate credentials",

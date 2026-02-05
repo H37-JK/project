@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket, APIRouter
 from backend.logs.logging_route import LoggingRoute
-from backend.websocket.connection_anager import manager
+from backend.websocket.connection_manager import manager
 from fastapi import WebSocketDisconnect
 
 router = APIRouter (

@@ -22,7 +22,13 @@ def get_remote_engine(sql_url):
 # 세션 가져 오기
 def get_session():
     with Session(get_engine()) as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
 def get_remote_session(sql_url):
     with Session(get_remote_engine(sql_url)) as session:

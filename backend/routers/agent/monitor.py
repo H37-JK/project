@@ -6,9 +6,9 @@ from sqlmodel import select
 
 from backend.helper.date import get_utc_now
 from backend.logs.logging_route import LoggingRoute
-from backend.model.monitor import Monitor, MonitorCreate, MonitorCreateResponse, MonitorUpdateResponse, MonitorUpdate
+from backend.model.monitor.monitor import Monitor, MonitorCreate, MonitorCreateResponse, MonitorUpdateResponse, MonitorUpdate
 from backend.db.engine import SessionDep
-from backend.model.user import User
+from backend.model.user.user import User
 from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (

@@ -1,5 +1,4 @@
 from uuid import UUID
-from datetime import datetime
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,14 +6,14 @@ from sqlmodel import select
 from typing import Annotated
 
 from backend.helper.date import get_utc_now
-from backend.helper.server_info import extract_domain, extract_domain_https, extract_domain_http
+from backend.helper.server_info import extract_domain_https
 from backend.model.api.api_request_history import ApiRequestHistory, ApiRequestHistoryResponse
-from backend.model.user import User
+from backend.model.user.user import User
 from backend.passlib.jwt_token import get_current_user
 from backend.db.engine import SessionDep
 from backend.logs.logging_route import LoggingRoute
 from backend.model.api.api_request import ApiRequest, ApiRequestCreateResponse, ApiRequestCreate, ApiRequestCall
-from backend.httpx.httpx_api import get, post, patch, delete, client
+from backend.httpx.httpx_api import client
 
 router = APIRouter (
     tags = ["api-request"],

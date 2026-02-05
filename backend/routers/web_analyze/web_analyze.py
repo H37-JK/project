@@ -1,19 +1,16 @@
 import asyncio
-import json
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic.v1 import UUID1
-from sentry_sdk.utils import json_dumps
 from sqlmodel import select
 
 from backend.db.engine import SessionDep
 from backend.helper.server_info import extract_domain, get_server_info, get_ssl_info, get_headers_info, get_whois_info, \
     get_dns_records_info, get_server_status_info, get_port_status_info, get_tech_stack_info
 from backend.logs.logging_route import LoggingRoute
-from backend.model.user import User
-from backend.model.web_analyze import WebAnalyze, WebAnalyzeCreateResponse, WebAnalyzeCreate
+from backend.model.user.user import User
+from backend.model.web_analyze.web_analyze import WebAnalyze, WebAnalyzeCreateResponse, WebAnalyzeCreate
 from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (

@@ -3,12 +3,13 @@ from typing import List
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime
 from backend.helper.date import get_utc_now
-from backend.model.user import User
+from backend.model.user.user import User
 
 class ApiCollection(SQLModel, table = True):
+    __tablename__ = "api_collection"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
     name: str
-    parent_id: UUID | None = Field(default = None, foreign_key = "apicollection.id", ondelete = "CASCADE")
+    parent_id: UUID | None = Field(default = None, foreign_key = "api_collection.id", ondelete = "CASCADE")
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_collections")
     api_requests: List["ApiRequest"] = Relationship(back_populates = "api_collection", sa_relationship_kwargs={"cascade": "all, delete-orphan"})

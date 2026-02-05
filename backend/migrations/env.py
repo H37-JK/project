@@ -7,12 +7,11 @@ from alembic import context
 
 import sys
 import os
-from os.path import abspath, dirname
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(os.path.dirname(current_dir))
 sys.path.insert(0, parent_dir)
 
-from backend.model.user import User
 from sqlmodel import SQLModel
 
 

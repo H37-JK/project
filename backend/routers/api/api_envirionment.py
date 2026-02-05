@@ -5,7 +5,7 @@ from sqlmodel import select
 from typing import Annotated
 
 from backend.helper.date import get_utc_now
-from backend.model.user import User
+from backend.model.user.user import User
 from backend.passlib.jwt_token import get_current_user
 from backend.db.engine import SessionDep
 from backend.logs.logging_route import LoggingRoute

@@ -1,8 +1,8 @@
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy.dialects.postgresql.json import JSONB
-from backend.model.user import User
+from backend.model.user.user import User
 from backend.helper.date import get_utc_now
-from typing import Dict, Any, List
+from typing import List
 from sqlalchemy import Column
 from datetime import datetime
 from uuid import UUID, uuid4

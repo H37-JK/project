@@ -7,9 +7,9 @@ from sqlmodel import select
 
 from backend.helper.date import get_utc_now
 from backend.passlib.jwt_token import get_current_user
-from backend.model.user import User
+from backend.model.user.user import User
 from backend.logs.logging_route import LoggingRoute
-from backend.model.agent import Agent, AgentCreateResponse, AgentCreate, AgentUpdateResponse, AgentUpdate
+from backend.model.agent.agent import Agent, AgentCreateResponse, AgentCreate, AgentUpdateResponse, AgentUpdate
 from backend.db.engine import SessionDep
 from backend.agent.agent import agent_worker_thread
 

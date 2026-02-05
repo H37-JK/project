@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlmodel import select
 
 from backend.logs.logging_route import LoggingRoute
-from backend.model.user import User, UserCreate, UserUpdate, UserCreateResponse, UserUpdateResponse
+from backend.model.user.user import User, UserCreate, UserUpdate, UserCreateResponse, UserUpdateResponse
 from backend.db.engine import SessionDep
 from backend.passlib.argon2 import encode_password, verify_password
 from backend.passlib.jwt_token import create_access_token
@@ -79,6 +79,16 @@ async def login_for_access_token (
     )
     return Token(access_token = access_token, token_type = "Bearer")
 
+
+@router.post("/logout")
+async def logout(response: Response):
+    response.delete_cookie (
+        key = "access_token",
+        path = "/",
+        httponly =  True
+    )
+
+    return {"message": "로그 아웃 되었습니다."}
 
 @router.post("/create/user", response_model = UserCreateResponse)
 async def create_user (

@@ -1,7 +1,5 @@
-import sys
 import os
 import warnings
-
 import traceback
 
 from contextlib import asynccontextmanager
@@ -12,28 +10,24 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware import Middleware
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
-
-from backend.logs.logs import logger
 from backend.logs.logging_route import LoggingRoute
+from backend.logs.logs import logger
 from backend.db.engine import create_db_and_tables
-from backend.routers import user
+from backend.routers.user import user
 from backend.routers.api import api_requeset
 from backend.routers.api import api_collection
 from backend.routers.api import api_envirionment
 from backend.routers.api import api_request_history
 from backend.routers.file import file
 from backend.routers.file import file_collection
-from backend.routers import db
-from backend.routers import monitor
-from backend.routers import web_analyze
-from backend.routers import agent
-from backend.routers import websocket
+from backend.routers.agent import monitor
+from backend.routers.web_analyze import web_analyze
+from backend.routers.agent import agent
+from backend.routers.websocket import websocket
 from backend.routers.auth import auth
+from backend.routers.database import database_server_info
+from backend.routers.database import query
 from fastapi import Request
 
 warnings.filterwarnings("ignore", category=UserWarning, message="pkg_resources is deprecated as an API.")
@@ -48,18 +42,21 @@ async def lifespan(app: FastAPI):
     yield
 
 
-middleware = [
-    Middleware (
-        CORSMiddleware, # type: ignore
-        allow_origins = origins,
-        allow_credentials = True,
-        allow_methods = ["*"],
-        allow_headers = ["*"]
-    )
-]
+app = FastAPI(lifespan = lifespan, route_class = LoggingRoute)
+app.add_middleware (
+    SessionMiddleware, # type: ignore
+    secret_key = os.getenv("SECRET_KEY"),
+    same_site="lax",
+    https_only = False
+)
 
-app = FastAPI(middleware = middleware, lifespan = lifespan, route_class = LoggingRoute)
-app.add_middleware(SessionMiddleware, secret_key = os.getenv("SECRET_KEY")) #type: ignore
+app.add_middleware (
+    CORSMiddleware, # type: ignore
+    allow_origins = origins,
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
 
 app.include_router(user.router)
 app.include_router(api_requeset.router)
@@ -68,15 +65,15 @@ app.include_router(api_envirionment.router)
 app.include_router(api_request_history.router)
 app.include_router(file.router)
 app.include_router(file_collection.router)
-app.include_router(db.router)
 app.include_router(monitor.router)
 app.include_router(web_analyze.router)
 app.include_router(agent.router)
 app.include_router(websocket.router)
 app.include_router(auth.router)
+app.include_router(database_server_info.router)
+app.include_router(query.router)
 
 app.mount("/files", StaticFiles(directory = "uploads"), name = "files")
-
 
 @app.exception_handler(IntegrityError)
 async def integrity_exception_handler(request: Request, error: IntegrityError):

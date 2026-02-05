@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
 from sqlmodel import select
 from backend.db.engine import SessionDep
@@ -8,7 +8,7 @@ from backend.helper.date import get_utc_now
 from backend.logs.logging_route import LoggingRoute
 from backend.model.api.api_collection import ApiCollection, ApiCollectionCreate, ApiCollectionUpdate, \
     ApiCollectionUpdateResponse, ApiCollectionCreateResponse
-from backend.model.user import User
+from backend.model.user.user import User
 from backend.passlib.jwt_token import get_current_user
 
 router = APIRouter (
