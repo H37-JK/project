@@ -11,11 +11,11 @@ from datetime import datetime
 
 class Monitor(SQLModel, table = True):
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    host: str
-    port: int
-    username: str
-    password: str | None = Field(default = None)
-    key: str | None = Field(default = None)
+    host: str = Field(max_length = 50)
+    port: int = Field(ge = 1, le = 65535, max_length = 50)
+    username: str = Field(max_length = 50)
+    password: str | None = Field(default = None, max_length = 50)
+    key: str | None = Field(default = None, max_length = 100)
     result: Dict[str, Any] = Field(default_factory = dict, sa_column = Column(JSONB))
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "monitors")
@@ -24,11 +24,11 @@ class Monitor(SQLModel, table = True):
 
 
 class MonitorCreate(SQLModel):
-    host: str
-    port: int
-    username: str
-    password: str | None = Field(default = None)
-    key: str | None = Field(default = None)
+    host: str = Field(max_length = 50)
+    port: int = Field(ge = 1, le = 65535,max_length = 50)
+    username: str = Field(max_length = 50)
+    password: str | None = Field(default = None, max_length = 50)
+    key: str | None = Field(default = None, max_length = 100)
 
 
 class MonitorCreateResponse(SQLModel):
@@ -42,11 +42,11 @@ class MonitorCreateResponse(SQLModel):
 
 
 class MonitorUpdate(SQLModel):
-    host: str | None = Field(default = None)
-    port: int | None = Field(default = None)
-    username: str | None = Field(default = None)
-    password: str | None = Field(default = None)
-    key: str | None = Field(default = None)
+    host: str | None = Field(default = None, max_length = 50)
+    port: int | None = Field(default = None, ge = 1, le = 65535, max_length = 50)
+    username: str | None = Field(default = None, max_length = 50)
+    password: str | None = Field(default = None, max_length = 50)
+    key: str | None = Field(default = None, max_length = 100)
 
 
 class MonitorUpdateResponse(SQLModel):

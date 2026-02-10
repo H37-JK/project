@@ -62,12 +62,11 @@ async def login_for_access_token (
     session: SessionDep,
     response: Response
 ) -> Token:
-    user = await authenticate(session, form_data.username, form_data.password)
+    user: User = await authenticate(session, form_data.username, form_data.password)
     if not user:
         raise HTTPException (
             status_code = status.HTTP_401_UNAUTHORIZED,
             detail = "이메일이나 비밀번호가 틀립니다.",
-            headers = {"WWW-Authenticate": "Bearer"},
         )
     data = {"id": user.id}
     access_token = create_access_token(data)
@@ -77,7 +76,7 @@ async def login_for_access_token (
         httponly = True,
         max_age = 3600,
     )
-    return Token(access_token = access_token, token_type = "Bearer")
+    return Token(access_token = access_token, token_type = "Bearer", id = user.id, email = user.email)
 
 
 @router.post("/logout")
@@ -88,13 +87,19 @@ async def logout(response: Response):
         httponly =  True
     )
 
-    return {"message": "로그 아웃 되었습니다."}
+    return {"message": "로그아웃 되었습니다."}
 
 @router.post("/create/user", response_model = UserCreateResponse)
 async def create_user (
     user_create: UserCreate,
     session: SessionDep
 ):
+    check_user = session.exec(select(User.email == user_create.email)).one_or_none()
+    if check_user:
+        raise HTTPException (
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = "이미 존재 하는 이메일 입니다."
+        )
     user = User.model_validate(user_create)
     user.password = encode_password(user.password)
     session.add(user)

@@ -48,18 +48,22 @@ body {
   --tw-content: "";
 }
 
+.background-gradient {
+  background-image: radial-gradient(at 170% 0, #312e81 0, transparent 69%), radial-gradient(at 0 -30%, #155e75 0, transparent 50%) !important;
+}
+
 .cm-editor {
-  background-color: #181818 !important; /* 원하는 배경색으로 변경 */
+  background-color: #181818 !important;
 }
 
 .cm-activeLine {
-  background-color: #181818 !important; /* 활성 줄 배경색 */
+  background-color: #181818 !important;
 }
 
 .cm-gutters {
-  background-color: #181818 !important; /* 에디터 배경색과 동일하게 맞추는 것이 좋음 */
-  border-right: 1px solid #181818; /* 구분선 색상 */
-  color: #abb2bf; /* 줄 번호 색상 */
+  background-color: #181818 !important;
+  border-right: 1px solid #181818;
+  color: #abb2bf;
 }
 
 .ͼo .cm-activeLineGutter {

@@ -1,11 +1,10 @@
 import Image from "next/image";
 import {AiFillAlert, AiFillAliwangwang} from "react-icons/ai";
 import {IoTerminal} from "react-icons/io5";
-import {useState} from "react";
+import {useSession} from "next-auth/react";
 
 const Header = () => {
-    const [email, setEmail] = useState('these990703@gmail.com')
-
+    const { data: session, status} = useSession()
     return (
         <div className="flex flex-row border-b border-zinc-800 p-3 !py-2 text-sm">
             {/*왼쪽*/}
@@ -24,7 +23,7 @@ const Header = () => {
                     <path d="M16 3.549L7.12 20.600" data-sentry-element="path"
                           data-sentry-source-file="LayoutHeader.tsx"></path>
                 </svg>
-                <div>{email}</div>
+                <div>{session?.user?.email}</div>
             </div>
             {/*오른쪽*/}
             <div className="flex flex-1 justify-end items-center pr-3 space-x-3">

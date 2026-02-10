@@ -9,7 +9,7 @@ from backend.model.user.user import User
 class FileCollection(SQLModel, table = True):
     __tablename__ = "file_collection"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    name: str
+    name: str = Field(default = "none", max_length = 50)
     parent_id: UUID | None = Field(default = None, foreign_key = "file_collection.id", ondelete = "CASCADE")
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "file_collections")
@@ -19,7 +19,7 @@ class FileCollection(SQLModel, table = True):
 
 
 class FileCollectionCreate(SQLModel):
-    name: str
+    name: str = Field(default = "none", max_length = 50)
     parent_id: UUID | None = Field(default = None)
 
 
@@ -31,7 +31,7 @@ class FileCollectionCreateResponse(SQLModel):
 
 
 class FileCollectionUpdate(SQLModel):
-    name: str | None = Field(default = None)
+    name: str | None = Field(default = None, max_length = 50)
     parent_id: UUID | None = Field(default = None)
 
 

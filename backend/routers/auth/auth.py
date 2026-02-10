@@ -1,3 +1,5 @@
+import urllib
+
 from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI, Request, APIRouter, Response, HTTPException
 import os
@@ -44,7 +46,7 @@ async def auth (
     try:
         token = await oauth.google.authorize_access_token(request)
     except Exception as e:
-        raise HTTPException(status_code=400, detail="인증에 실패 했습니다.")
+        return RedirectResponse(url="http://localhost:3000/login?error=google_auth_failed")
 
     user_info = token.get("userinfo")
 
@@ -70,10 +72,19 @@ async def auth (
 
     data = {"id": user.id}
     access_token = create_access_token(data)
+
+    base_url = "http://localhost:3000/auth/google/callback"
+    params = {
+        "access_token": access_token,
+        "email": user.email,
+        "id": str(user.id)
+    }
+    query_string = urllib.parse.urlencode(params)
+    response = RedirectResponse(url=f"{base_url}?{query_string}")
     response.set_cookie (
         key = "access_token",
         value = access_token,
         httponly = True,
         max_age = 3600,
     )
-    return {"user": user}
+    return response

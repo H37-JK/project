@@ -13,14 +13,14 @@ from backend.model.user.user import User
 class ApiRequest(SQLModel, table = True):
     __tablename__ = "api_request"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    name: str | None = Field(default = None)
-    method: str | None = Field(default = None, index = True)
-    url: str | None = Field(default = None)
+    name: str = Field(default = "none", max_length = 50)
+    method: str | None = Field(default = None, index = True, max_length = 50)
+    url: str | None = Field(default = None, max_length = 50)
     headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column = Column(JSONB))
     params: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
-    body_type: str | None = Field(default = None)
+    body_type: str | None = Field(default = None, max_length = 50)
     body_content: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
-    auth_type: str | None = Field(default = None)
+    auth_type: str | None = Field(default = None, max_length = 50)
     auth_content: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
     user_id:  UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_requests")
@@ -32,7 +32,7 @@ class ApiRequest(SQLModel, table = True):
 
 
 class ApiRequestCreate(SQLModel):
-    name: str
+    name: str = Field(default = "none", max_length = 50)
 
 
 class ApiRequestCreateResponse(SQLModel):
@@ -43,13 +43,13 @@ class ApiRequestCreateResponse(SQLModel):
 
 class ApiRequestCall(SQLModel):
     id: UUID
-    method: str
-    url: str
+    method: str = Field(max_length = 50)
+    url: str = Field(max_length = 50)
     headers: List[Dict[str, Any]]  = Field(default_factory = list)
     params: List[Dict[str, Any]] = Field(default_factory = list)
-    body_type: str | None = Field(default = None)
+    body_type: str | None = Field(default = None, max_length = 50)
     body_content: Dict[str, Any] | None = Field(default = None)
-    auth_type: str | None = Field(default = None)
+    auth_type: str | None = Field(default = None, max_length = 50)
     auth_content: Dict[str, Any] | None = Field(default = None)
 
 

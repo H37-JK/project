@@ -3,6 +3,8 @@ import type {AppProps} from "next/app";
 import localFont from "next/font/local";
 import Header from "@/layout/header/Header";
 import SideMenuList from "@/layout/side/SideMenuList";
+import {SessionProvider} from "next-auth/react";
+import {useRouter} from "next/router";
 
 
 const pretendard = localFont({
@@ -13,18 +15,36 @@ const pretendard = localFont({
 });
 
 
-export default function App({Component, pageProps}: AppProps) {
+export default function App({
+   Component,
+   pageProps: { session, ...pageProps },
+}: AppProps) {
+    const router = useRouter()
+    const hiddenPaths = ["/login", "/register", "/auth", "/auth/error"]
+    const isLayoutHidden = hiddenPaths.includes(router.pathname)
+
     return (
-        <main className={`${pretendard.className} overflow-hidden h-screen`}>
-            <div className="flex flex-col w-full h-full">
-                {/*헤더*/}
-                <Header/>
-                <div className="flex flex-1 overflow-hidden relative">
-                    {/*사이드바*/}
-                    <SideMenuList/>
-                    <Component {...pageProps} />
-                </div>
-            </div>
-        </main>
+        <SessionProvider session={session}>
+            <main className={`${pretendard.className} overflow-hidden h-screen`}>
+                {isLayoutHidden ? (
+                    <div className="flex flex-col w-full h-full">
+                        <div className="flex flex-1 overflow-hidden relative">
+                            <Component {...pageProps} />
+                        </div>
+                    </div>
+                ): (
+                    <div className="flex flex-col w-full h-full">
+                        {/*헤더*/}
+                        <Header/>
+                        <div className="flex flex-1 overflow-hidden relative">
+                            {/*사이드바*/}
+                            <SideMenuList/>
+                            <Component {...pageProps} />
+                        </div>
+                    </div>
+                )
+                }
+            </main>
+        </SessionProvider>
     )
 }

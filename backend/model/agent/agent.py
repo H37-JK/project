@@ -9,8 +9,8 @@ from uuid import UUID, uuid4
 
 class Agent(SQLModel, table = True):
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    name: str = Field(default = "none")
-    prompt: str
+    name: str = Field(default = "none", max_length = 50)
+    prompt: str = Field(max_length = 1000)
     history:  List[str] = Field(default_factory = list, sa_column = Column(JSONB))
     result: str | None = Field(default = None)
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
@@ -20,13 +20,13 @@ class Agent(SQLModel, table = True):
 
 
 class AgentCreate(SQLModel):
-    name: str = Field(default = "none")
-    prompt: str
+    name: str = Field(default = "none", max_length = 50)
+    prompt: str = Field(max_length = 1000)
 
 
 class AgentCreateResponse(SQLModel):
     id: UUID
-    name: str = Field(default = "none")
+    name: str
     prompt: str
     history: List[str] = Field(default_factory = list)
     result: str | None = Field(default = None)
@@ -34,7 +34,7 @@ class AgentCreateResponse(SQLModel):
 
 
 class AgentUpdate(SQLModel):
-    name: str = Field(default = "none")
+    name: str | None = Field(default = None, max_length = 50)
     prompt: str | None = Field(default = None)
 
 

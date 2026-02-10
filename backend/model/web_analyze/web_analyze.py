@@ -10,7 +10,7 @@ from backend.helper.date import get_utc_now
 class WebAnalyze(SQLModel, table = True):
     __tablename__ = "web_analyze"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    domain: str
+    domain: str = Field(max_length = 50)
     ip: str | None = Field(default = None)
     server_info: Dict[str, Any] = Field(default_factory = dict, sa_column = Column(JSONB))
     server_status_info: Dict[str, Any] = Field(default_factory = dict, sa_column = Column(JSONB))
@@ -26,7 +26,7 @@ class WebAnalyze(SQLModel, table = True):
 
 
 class WebAnalyzeCreate(SQLModel):
-    domain: str
+    domain: str = Field(max_length = 50)
 
 
 class WebAnalyzeCreateResponse(SQLModel):

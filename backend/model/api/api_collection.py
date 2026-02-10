@@ -8,7 +8,7 @@ from backend.model.user.user import User
 class ApiCollection(SQLModel, table = True):
     __tablename__ = "api_collection"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    name: str
+    name: str = Field(default = "none", max_length = 50)
     parent_id: UUID | None = Field(default = None, foreign_key = "api_collection.id", ondelete = "CASCADE")
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_collections")
@@ -18,7 +18,7 @@ class ApiCollection(SQLModel, table = True):
 
 
 class ApiCollectionCreate(SQLModel):
-    name: str
+    name: str = Field(default = "none",max_length = 50)
     parent_id: UUID | None = Field(default = None)
 
 
@@ -30,7 +30,7 @@ class ApiCollectionCreateResponse(SQLModel):
 
 
 class ApiCollectionUpdate(SQLModel):
-    name: str | None = Field(default = None)
+    name: str | None = Field(default = None, max_length = 50)
     parent_id: UUID | None = Field(default = None)
 
 
