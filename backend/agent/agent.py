@@ -130,7 +130,19 @@ async def add_visual_tags(page):
 
     return visible_elements
 
-async def run_browser_agent(prompt):
+async def capture(page, websocket):
+    screenshot_path = "capture.png"
+    await page.screenshot(path = screenshot_path)
+    screenshot_bytes = await page.screenshot()
+    try:
+        if websocket and websocket.client_state.value == 1:
+            img_str = base64.b64encode(screenshot_bytes).decode('utf-8')
+            await websocket.send_text(img_str)
+    except Exception as e:
+        print(f"이미지 전송 중 루프 충돌 혹은 끊김: {e}")
+    return screenshot_path
+
+async def run_browser_agent(prompt, websocket: WebSocket = None):
     user_data_dir = "./user_data"
     history = []
     result = "failed"
@@ -150,16 +162,12 @@ async def run_browser_agent(prompt):
         for step in range(20):
             print(f"\n--- Step {step + 1} ---")
 
+            await capture(page, websocket)
             try:
                 visible_elements = await add_visual_tags(page)
-            except:
+            except Exception:
                 visible_elements = []
-
-            screenshot_path = "capture.png"
-            await page.screenshot(path = screenshot_path)
-            screenshot_bytes = await page.screenshot()
-            img_str = base64.b64encode(screenshot_bytes).decode('utf-8')
-            # await websocket.send_text(img_str)
+            screenshot_path = await capture(page, websocket)
             print("🧠 생각 중...")
             action_data = get_ai_next_action(prompt, history, screenshot_path)
 
@@ -223,14 +231,12 @@ async def run_browser_agent(prompt):
       except Exception as e:
         print(e)
         history.append("실패")
-      # finally:
-      #     # if websocket:
-      #     #     try:
-      #     #         await websocket.send_text("STREAM_END")
-      #     #         await websocket.close()
-      #     #     except Exception as e:
-      #     #         print(f"소켓 종료 중 에러: {e}")
-
+      finally:
+          if websocket:
+              try:
+                  await websocket.send_text("STREAM_END")
+              except Exception as e:
+                  print(f"소켓 종료 중 에러: {e}")
 
       await browser.close()
     return {
@@ -239,13 +245,13 @@ async def run_browser_agent(prompt):
     }
 
 
-def agent_worker_thread(prompt: str):
+def agent_worker_thread(prompt: str, websocket):
     if sys.platform.startswith("win"):
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     loop = asyncio.new_event_loop()
     try:
         asyncio.set_event_loop(loop)
-        return loop.run_until_complete(run_browser_agent(prompt))
+        return loop.run_until_complete(run_browser_agent(prompt, websocket))
     finally:
         try:
             loop.run_until_complete(asyncio.sleep(0))

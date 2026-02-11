@@ -61,9 +61,6 @@ export default function Home() {
         setIsMenuToggle(!isMenuToggle)
     }
 
-    // @ts-ignore
-    // @ts-ignore
-    // @ts-ignore
     return (
         <div className="flex flex-1 overflow-hidden pl-0 md:pl-10">
             {/*메뉴*/}

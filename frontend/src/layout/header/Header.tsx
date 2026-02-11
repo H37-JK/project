@@ -1,29 +1,15 @@
 import Image from "next/image";
 import {AiFillAlert, AiFillAliwangwang} from "react-icons/ai";
 import {IoTerminal} from "react-icons/io5";
-import {useSession} from "next-auth/react";
-
+import {useSession, signOut} from "next-auth/react";
+import { IoMdLogOut } from "react-icons/io";
 const Header = () => {
     const { data: session, status} = useSession()
     return (
         <div className="flex flex-row border-b border-zinc-800 p-3 !py-2 text-sm">
             {/*왼쪽*/}
             <div className="flex items-center space-x-3">
-                <Image
-                    className="dark:invert"
-                    src="/vercel.svg"
-                    alt="Vercel logomark"
-                    width={16}
-                    height={16}
-                />
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" className="text-zinc-500"
-                     strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none"
-                     shapeRendering="geometricPrecision" data-sentry-element="svg"
-                     data-sentry-source-file="LayoutHeader.tsx">
-                    <path d="M16 3.549L7.12 20.600" data-sentry-element="path"
-                          data-sentry-source-file="LayoutHeader.tsx"></path>
-                </svg>
-                <div>{session?.user?.email}</div>
+                <div>{session?.user?.email}님 안녕하세요.</div>
             </div>
             {/*오른쪽*/}
             <div className="flex flex-1 justify-end items-center pr-3 space-x-3">
@@ -46,7 +32,7 @@ const Header = () => {
                         <IoTerminal className="h-5 w-5 text-zinc-300 transition-colors group-hover:text-white"/>
                     </button>
                 </div>
-                <button type="button"
+                <button onClick={() => signOut({ callbackUrl: "/auth"})} type="button"
                         className="w-5 h-5 bg-zinc-300 rounded-full border-zinc-500 text-black cursor-pointer">A
                 </button>
             </div>

@@ -21,7 +21,7 @@ from backend.routers.api import api_envirionment
 from backend.routers.api import api_request_history
 from backend.routers.file import file
 from backend.routers.file import file_collection
-from backend.routers.agent import monitor
+from backend.routers.monitor import monitor
 from backend.routers.web_analyze import web_analyze
 from backend.routers.agent import agent
 from backend.routers.websocket import websocket

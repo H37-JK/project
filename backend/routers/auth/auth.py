@@ -81,10 +81,4 @@ async def auth (
     }
     query_string = urllib.parse.urlencode(params)
     response = RedirectResponse(url=f"{base_url}?{query_string}")
-    response.set_cookie (
-        key = "access_token",
-        value = access_token,
-        httponly = True,
-        max_age = 3600,
-    )
     return response

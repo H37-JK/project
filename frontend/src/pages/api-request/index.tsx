@@ -1,35 +1,45 @@
-import {BsFiletypeSql} from "react-icons/bs";
-import {IoSearchOutline} from "react-icons/io5";
-import {CiViewTable} from "react-icons/ci";
+import {IoLogoChrome, IoSearchOutline} from "react-icons/io5";
 import {TbLayoutSidebarLeftCollapse} from "react-icons/tb";
 import {HiX} from "react-icons/hi";
 import {GoPlus} from "react-icons/go";
-import {CiFilter} from "react-icons/ci";
-import {MdFormatListBulleted} from "react-icons/md";
-import {BsSend} from "react-icons/bs";
-import {LuRefreshCw} from "react-icons/lu";
-import {ImSpinner2} from "react-icons/im";
-import {useState} from "react";
-import CustomCheckBox from "@/components/checkbox/CustomCheckBox";
-import TableColumnData from "@/api/table/TableColumnData";
-import TableColumnComponent from "@/components/table/TableColumnComponent";
-import TableValueData from "@/api/table/TableValueData";
-import TableValueComponent from "@/components/table/TableValueComponent";
-import SnippetData from "@/api/sql/SnippetData";
+import React, {useState} from "react";
 import SnippetComponent from "@/components/sql/SnippetComponent";
-import {MdTextSnippet} from "react-icons/md";
-import CodeEditor from "@/components/editor/CodeEditor";
 import {IoIosArrowDown} from "react-icons/io";
 import ApiRequestData from "@/api/api-request/ApiRequestData";
 import {RiDeleteBin6Line} from "react-icons/ri";
 import {FaPlus} from "react-icons/fa6";
 import JsonEditor from "@/components/editor/JsonEditor";
 import { IoIosSave } from "react-icons/io";
+import {LuPencilLine} from "react-icons/lu";
+import {useSession} from "next-auth/react";
+import api from "@/lib/axios";
+import useSWR from "swr";
+import { ApiRequest } from "@/constants/api";
+import useSWRMutation from "swr/mutation";
+import SkeletonComponent from "@/components/skeleton/SkeletonComponent";
+import ToolTipComponent from "@/components/tooltip/TooltipComponent";
+import {CiTrash} from "react-icons/ci";
+
+const getFetcher = (url: string) => api.get(url).then(res => res.data)
+
+const createFetcher = async (url: string, {arg}: { arg: { data: any } }) => {
+    const res = await api.post(url, arg.data);
+    return res.data;
+}
+
+const deleteFetcher = async (url: string, {arg}: { arg: string }) => {
+    const res = await api.delete(`${url}/${arg}`);
+    return res.data;
+}
 
 export default function Home() {
+    const {data: session, status} = useSession()
 
     const [isShowAlert, setIsShowAlert] = useState(false)
     const [isMenuToggle, setIsMenuToggle] = useState(true)
+    const [showTrash, setShowTrash] = useState(false)
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const handleIsShowAlert = () => {
         setIsShowAlert(true)
@@ -43,6 +53,28 @@ export default function Home() {
     const handleIsMenuToggle = () => {
         setIsMenuToggle(!isMenuToggle)
     }
+
+    const {data: apis, isLoading, mutate} = useSWR<ApiRequest[]>('/get/api-requests', getFetcher)
+
+    const {trigger: createTrigger, isMutating: createMutating} = useSWRMutation (
+        '/create/api-request',
+        createFetcher, {
+            onSuccess: () => mutate()
+        }
+    )
+
+    const {trigger: deleteTrigger, isMutating: deleteMutating} = useSWRMutation (
+        '/delete/api-request',
+        createFetcher, {
+            onSuccess: () => mutate()
+        }
+    )
+
+    const handleDeleteClick = (id: string) => {
+        setSelectedId(id);
+        setIsModalOpen(true);
+    };
+
 
     const jsonString = '{\n' +
         '  "method": "GET",\n' +
@@ -90,8 +122,11 @@ export default function Home() {
             {/*메뉴*/}
             <div style={{flex: '29.5 1 0px'}}
                  className={`${isMenuToggle ? 'min-w-64 max-w-[32rem] border-r' : 'border-0 min-w-0 max-w-0 w-0'} hidden md:flex transition-all duration-150 ease-linear flex-col border-zinc-800 z-10 box-content overflow-hidden`}>
-                <div className="border-b border-zinc-800 min-h-12 px-6 flex items-center">
-                    <h4 className="text-lg">모음집</h4>
+                <div className="border-b border-zinc-800 min-h-10 px-4 flex items-center">
+                    <h4 className="text-md">API 목록</h4>
+                    <div className="flex flex-1 justify-end">
+                        <LuPencilLine onClick={() => setShowTrash(!showTrash)} className="h-4 w-4 text-zinc-400 cursor-pointer hover:text-zinc-300"/>
+                    </div>
                 </div>
                 {/*테이블 검색*/}
                 <div className="p-3 border-b border-zinc-800">
@@ -104,10 +139,36 @@ export default function Home() {
                 </div>
 
                 {/*스니펫 리스트*/}
-                <div className="flex flex-col text-sm overflow-auto border-b border-zinc-800 mb-2">
-                    <h4 className="text-md py-1.5 p-4 text-zinc-400">요청모음 (2)</h4>
-                    {ApiRequestData().map((data, key) => (
-                        <SnippetComponent name={data.name} key={key}/>
+                <div className="flex flex-col text-sm overflow-auto border-zinc-800 mb-2">
+                    {isLoading && (
+                        <div className="flex flex-col">
+                            {[...Array(20)].map((_, i) => <SkeletonComponent key={i}/>)}
+                        </div>
+                    )}
+                    {apis && apis.map((data, key) => (
+                        <div key={key}
+                             className="flex group items-center cursor-pointer border-b border-zinc-800 hover:bg-zinc-800 p-3.5 py-1.5 gap-2 text-md w-full">
+                            <div className="flex-shrink-0">
+                                <IoLogoChrome className="h-4 w-4 fill-gray-400 group-hover:fill-white"/>
+                            </div>
+
+                            <div className="relative flex-1 min-w-0 group/text">
+                                <div className="text-zinc-300 group-hover:text-white truncate">
+                                    {data.name}
+                                </div>
+
+                                <ToolTipComponent data={data.name} isFirst={key === 0}/>
+                            </div>
+
+                            {showTrash && (
+                                <div onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteClick(data.id);
+                                }} className="flex-shrink-0 flex justify-end">
+                                    <CiTrash className="h-4 w-4 fill-rose-400 group-hover:fill-red-500"/>
+                                </div>
+                            )}
+                        </div>
                     ))}
                 </div>
 

@@ -12,7 +12,8 @@ from backend.logs.logging_route import LoggingRoute
 from backend.model.agent.agent import Agent, AgentCreateResponse, AgentCreate, AgentUpdateResponse, AgentUpdate
 from backend.db.engine import SessionDep
 from backend.agent.agent import agent_worker_thread
-
+from backend.websocket.connection_manager import manager
+from backend.logs.logs import logger
 router = APIRouter (
     tags = ["agent"],
     responses = {404: {"description": "잘못된 경로 입니다."}},
@@ -42,10 +43,20 @@ async def create_agent (
     current_user: Annotated[User, Depends(get_current_user)],
     agent_create: AgentCreate,
 ):
-    # user_websocket = manager.get_connection(current_user.id)
+    websocket = None
+    logger.info(current_user.id)
+    for _ in range(30):
+        websocket = manager.get_connection(current_user.id)
+        if websocket:
+            break
+        await asyncio.sleep(0.1)
+
+    if not websocket:
+        raise HTTPException(status_code = 400, detail = "유저가 웹소켓에 연결되어 있지 않습니다.")
+
     loop = asyncio.get_running_loop()
-    response = await loop.run_in_executor(None, lambda: agent_worker_thread(agent_create.prompt))
-    # manager.disconnect(current_user.id)
+    response = await loop.run_in_executor(None, lambda: agent_worker_thread(agent_create.prompt, websocket))
+    manager.disconnect(current_user.id)
 
     agent = Agent.model_validate (
         agent_create,

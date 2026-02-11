@@ -1,28 +1,16 @@
-import {BiBook} from "react-icons/bi";
 import {RiTerminalBoxFill} from "react-icons/ri";
 import { TiCloudStorage } from "react-icons/ti";
-import { IoChatbubbleEllipses } from "react-icons/io5";
 import Link from "next/link";
-import { CiMonitor } from "react-icons/ci";
-import { IoTerminal } from "react-icons/io5";
 import { TbHeartRateMonitor } from "react-icons/tb";
-import { PiNotebookDuotone } from "react-icons/pi";
 import { FaChrome } from "react-icons/fa";
-import { MdOutlineSnippetFolder } from "react-icons/md";
-import { MdOutlineTextSnippet } from "react-icons/md";
-import { FaPhotoVideo } from "react-icons/fa";
-import { MdVideoLibrary } from "react-icons/md";
-import { FaCode } from "react-icons/fa6";
 import { CiViewTable } from "react-icons/ci"
-import { FaTableList } from "react-icons/fa6";
 import { TbMessageChatbotFilled } from "react-icons/tb";
-import { FaPencilAlt } from "react-icons/fa";
 
 const SideMenuList = () => {
     return (
         <div
             className="px-0 absolute hidden md:flex space-y-1 top-0 bottom-0 w-10 hover:w-60 transition-all duration-150 ease-linear z-[99] border group border-t-0 border-zinc-800 !bg-[#171717] flex-col">
-            <Link href="/storage">
+            <Link href="/web-agent" prefetch={false}>
                 <div
                     className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">
                     <div>
@@ -34,13 +22,13 @@ const SideMenuList = () => {
                     </div>
                 </div>
             </Link>
-            <Link href="/storage">
+            <Link href="/web-check" prefetch={false}>
                 <div
                     className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">
                     <div>
                         <svg data-v-485eaaba="" viewBox="0 0 24 24" className="svg-icons h-5 w-5 text-[rgb(137,137,137)] group-hover:text-zinc-200">
-                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                               stroke-width="2">
+                            <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
+                               strokeWidth="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <path d="M12 2a14.5 14.5 0 0 0 0 20a14.5 14.5 0 0 0 0-20M2 12h20"></path>
                             </g>
@@ -56,8 +44,8 @@ const SideMenuList = () => {
                     className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">
                     <div>
                         <svg data-v-485eaaba="" viewBox="0 0 24 24" className="svg-icons h-5 w-5 text-[rgb(137,137,137)] group-hover:text-zinc-200">
-                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                  stroke-width="2" d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"></path>
+                            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
+                                  strokeWidth="2" d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"></path>
                         </svg>
                     </div>
                     <div className="hidden group-hover:flex whitespace-nowrap">
@@ -88,7 +76,7 @@ const SideMenuList = () => {
                     </div>
                 </div>
             </Link>
-            <Link href="/storage">
+            <Link href="/storage" prefetch={false}>
                 <div
                     className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">
                     <div>
@@ -100,7 +88,7 @@ const SideMenuList = () => {
                     </div>
                 </div>
             </Link>
-            <Link href="/storage">
+            <Link href="/monitor" prefetch={false}>
                 <div
                     className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">
                     <div>
@@ -124,7 +112,7 @@ const SideMenuList = () => {
                     </div>
                 </div>
             </Link>
-            {/*<Link href="/storage">*/}
+            {/*<Link href="/storage" prefetch={false}>*/}
             {/*    <div*/}
             {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
             {/*        <div>*/}
@@ -136,7 +124,7 @@ const SideMenuList = () => {
             {/*        </div>*/}
             {/*    </div>*/}
             {/*</Link>*/}
-            {/*<Link href="/storage">*/}
+            {/*<Link href="/storage" prefetch={false}>*/}
             {/*    <div*/}
             {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
             {/*        <div>*/}
@@ -149,7 +137,7 @@ const SideMenuList = () => {
             {/*    </div>*/}
             {/*</Link>*/}
 
-            {/*<Link href="/storage">*/}
+            {/*<Link href="/storage" prefetch={false}>*/}
             {/*    <div*/}
             {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
             {/*        <div>*/}
@@ -161,7 +149,7 @@ const SideMenuList = () => {
             {/*        </div>*/}
             {/*    </div>*/}
             {/*</Link>*/}
-            {/*<Link href="/storage">*/}
+            {/*<Link href="/storage" prefetch={false}>*/}
             {/*    <div*/}
             {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
             {/*        <div>*/}
@@ -173,7 +161,7 @@ const SideMenuList = () => {
             {/*        </div>*/}
             {/*    </div>*/}
             {/*</Link>*/}
-            {/*<Link href="/storage">*/}
+            {/*<Link href="/storage" prefetch={false}>*/}
             {/*    <div*/}
             {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
             {/*        <div>*/}
@@ -185,7 +173,7 @@ const SideMenuList = () => {
             {/*        </div>*/}
             {/*    </div>*/}
             {/*</Link>*/}
-            {/*<Link href="/storage">*/}
+            {/*<Link href="/storage" prefetch={false}>*/}
             {/*    <div*/}
             {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
             {/*        <div>*/}

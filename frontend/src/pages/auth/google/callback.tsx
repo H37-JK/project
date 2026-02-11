@@ -27,11 +27,10 @@ export default function GoogleCallback() {
         } else if (router.isReady && !access_token) {
             router.push("/login");
         }
-    }, [router.isReady, router.query]);
+    }, [router, router.isReady, router.query]);
 
     return (
-        <div className="flex items-center justify-center h-screen">
-            <p className="text-xl">구글 로그인 처리 중입니다...</p>
-        </div>
+        <>
+        </>
     );
 }

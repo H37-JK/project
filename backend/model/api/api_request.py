@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from uuid import UUID, uuid4
 
+from billiard.connection import default_family
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import SQLModel, Field, Relationship
@@ -30,7 +31,6 @@ class ApiRequest(SQLModel, table = True):
     create_at: datetime  = Field(default_factory = get_utc_now)
     update_at: datetime  = Field(default_factory = get_utc_now)
 
-
 class ApiRequestCreate(SQLModel):
     name: str = Field(default = "none", max_length = 50)
 
@@ -43,6 +43,7 @@ class ApiRequestCreateResponse(SQLModel):
 
 class ApiRequestCall(SQLModel):
     id: UUID
+    name: str
     method: str = Field(max_length = 50)
     url: str = Field(max_length = 50)
     headers: List[Dict[str, Any]]  = Field(default_factory = list)
@@ -51,6 +52,7 @@ class ApiRequestCall(SQLModel):
     body_content: Dict[str, Any] | None = Field(default = None)
     auth_type: str | None = Field(default = None, max_length = 50)
     auth_content: Dict[str, Any] | None = Field(default = None)
+    update_at: datetime = Field(default_factory = get_utc_now)
 
 
 

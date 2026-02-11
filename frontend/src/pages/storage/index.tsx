@@ -7,8 +7,6 @@ import {FiUpload} from "react-icons/fi";
 import {FaFolderPlus} from "react-icons/fa";
 import {CiSearch} from "react-icons/ci";
 import {IoSearchOutline} from "react-icons/io5";
-import {MdCancel} from "react-icons/md";
-import {MdOutlineCancel} from "react-icons/md";
 import CancelIconCompomponent from "@/components/icon/CancelIconCompomponent";
 import Image from "next/image";
 import {GoDownload} from "react-icons/go";
@@ -132,81 +130,7 @@ export default function Home() {
                             <div
                                 className="flex-1 flex-col border-r overflow-auto max-h-full divide-y divide-zinc-800 border-zinc-800 hidden md:flex"
                                 style={{flex: '22 1 0px'}}>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
-                                <div
-                                    className="min-h-8 flex items-center px-2 cursor-pointer bg-zinc-900 hover:bg-zinc-800">test
-                                </div>
+
                             </div>
                             <div className="flex flex-1" style={{flex: '78 1 0px'}}>
                                 <div className="hidden md:flex flex-1"></div>
@@ -251,11 +175,8 @@ export default function Home() {
                                     </div>
                                 }
                             </div>
-
                         </div>
-
                     </div>
-
                 </div>
 
 
