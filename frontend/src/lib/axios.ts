@@ -20,10 +20,14 @@ export const createFetcher = async (url: string, {arg}: { arg: { data: any } }) 
     return res.data;
 }
 
+export const updateFetcher = async (url: string, {arg}: {arg: { id: string | null, data: any }}) => {
+    const res = await api.patch(`${url}/${arg.id}`, arg.data)
+    return res.data
+}
+
 export const deleteFetcher = async (url: string, {arg}: { arg: string }) => {
     const res = await api.delete(`${url}/${arg}`);
     return res.data;
 }
-
 
 export default api

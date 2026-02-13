@@ -1,8 +1,7 @@
 from typing import List, Dict, Any, Optional
 from uuid import UUID, uuid4
 
-from billiard.connection import default_family
-from sqlalchemy import Column
+from sqlalchemy import Column, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime
@@ -14,8 +13,8 @@ from backend.model.user.user import User
 class ApiRequest(SQLModel, table = True):
     __tablename__ = "api_request"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    name: str = Field(default = "none", max_length = 50)
-    method: str | None = Field(default = None, index = True, max_length = 50)
+    name: str = Field(default = "Untitled", max_length = 50)
+    method: str = Field(default = "GET", index = True, max_length = 50)
     url: str | None = Field(default = None, max_length = 50)
     headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column = Column(JSONB))
     params: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
@@ -23,6 +22,7 @@ class ApiRequest(SQLModel, table = True):
     body_content: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
     auth_type: str | None = Field(default = None, max_length = 50)
     auth_content: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
+    tab_active: bool = Field(default = True)
     user_id:  UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_requests")
     api_collection_id: UUID | None = Field(default = None, foreign_key = "api_collection.id", ondelete = "CASCADE")
@@ -32,13 +32,38 @@ class ApiRequest(SQLModel, table = True):
     update_at: datetime  = Field(default_factory = get_utc_now)
 
 class ApiRequestCreate(SQLModel):
-    name: str = Field(default = "none", max_length = 50)
+    name: str = Field(default = "Untitled", max_length = 50)
 
 
 class ApiRequestCreateResponse(SQLModel):
     id: UUID
     name: str
     create_at: datetime = Field(default_factory= get_utc_now)
+
+
+class ApiRequestUpdate(SQLModel):
+    name: str | None = Field(default = None)
+    method: str | None = Field(default = None, max_length = 50)
+    url: str | None = Field(default = None, max_length = 50)
+    headers: List[Dict[str, Any]]  = Field(default_factory = list)
+    params: List[Dict[str, Any]] = Field(default_factory = list)
+    body_type: str | None = Field(default = None, max_length = 50)
+    body_content: Dict[str, Any] | None = Field(default = None)
+    auth_type: str | None = Field(default = None, max_length = 50)
+    auth_content: Dict[str, Any] | None = Field(default = None)
+
+
+class ApiRequestUpdateResponse(SQLModel):
+    name: str
+    method: str = Field(max_length = 50)
+    url: str = Field(max_length = 50)
+    headers: List[Dict[str, Any]]  = Field(default_factory = list)
+    params: List[Dict[str, Any]] = Field(default_factory = list)
+    body_type: str | None = Field(default = None, max_length = 50)
+    body_content: Dict[str, Any] | None = Field(default = None)
+    auth_type: str | None = Field(default = None, max_length = 50)
+    auth_content: Dict[str, Any] | None = Field(default = None)
+    update_at: datetime = Field(default_factory = get_utc_now)
 
 
 class ApiRequestCall(SQLModel):

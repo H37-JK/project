@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 class Agent(SQLModel, table = True):
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    name: str = Field(default = "none", max_length = 50)
+    name: str = Field(default = "Untitled", max_length = 50)
     prompt: str = Field(max_length = 1000)
     history:  List[str] = Field(default_factory = list, sa_column = Column(JSONB))
     result: str | None = Field(default = None)
@@ -20,7 +20,7 @@ class Agent(SQLModel, table = True):
 
 
 class AgentCreate(SQLModel):
-    name: str = Field(default = "none", max_length = 50)
+    name: str = Field(default = "Untitled", max_length = 50)
     prompt: str = Field(max_length = 1000)
 
 

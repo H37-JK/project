@@ -2,7 +2,7 @@ from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select
+from sqlmodel import select, desc
 from typing import Annotated
 
 from backend.helper.date import get_utc_now
@@ -12,7 +12,8 @@ from backend.model.user.user import User
 from backend.passlib.jwt_token import get_current_user
 from backend.db.engine import SessionDep
 from backend.logs.logging_route import LoggingRoute
-from backend.model.api.api_request import ApiRequest, ApiRequestCreateResponse, ApiRequestCreate, ApiRequestCall
+from backend.model.api.api_request import ApiRequest, ApiRequestCreateResponse, ApiRequestCreate, ApiRequestCall, \
+    ApiRequestUpdate
 from backend.httpx.httpx_api import client
 
 router = APIRouter (
@@ -29,6 +30,13 @@ def build_options(option_list):
     return options
 
 
+@router.get("/get/tab-active-api-requests")
+async def get_api_requests (
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    return session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.tab_active == True).order_by(ApiRequest.create_at)).all()
+
 @router.get("/get/api-requests")
 async def get_api_requests (
     session: SessionDep,
@@ -41,7 +49,7 @@ async def get_api_requests (
 async def get_api_request (
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_user)],
-    id: int
+    id: UUID
 ):
     return session.exec(select(ApiRequest).where(ApiRequest.id == id, ApiRequest.user_id == current_user.id)).one_or_none()
 
@@ -152,6 +160,26 @@ async def create_api_request (
 
     return api_request
 
+@router.patch("/update/api-request/{id}")
+async def update_api_collection (
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_user)],
+    update_api_request: ApiRequestUpdate,
+    id: UUID
+) -> ApiRequest:
+    api_request = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == id)).one_or_none()
+    if not api_request:
+        raise HTTPException(status_code = 404, detail = "Request not found")
+
+    update_data = update_api_request.model_dump(exclude_unset = True, exclude_none = True)
+    api_request.sqlmodel_update(update_data)
+    print(api_request)
+
+    session.add(api_request)
+    session.commit()
+    session.refresh(api_request)
+
+    return api_request
 
 @router.delete("/delete/api-request/{id}")
 async def delete_api_request (
@@ -169,22 +197,3 @@ async def delete_api_request (
     return True
 
 
-# @router.patch("/update/api-request/{id}")
-# async def update_api_collection (
-#     session: SessionDep,
-#     current_user: Annotated[User, Depends(get_current_user)],
-#     request_api_request: ApiRequest,
-#     id: UUID
-# ) -> ApiRequest:
-#     api_request = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == id)).one_or_none()
-#     if not api_request:
-#         raise HTTPException(status_code = 404, detail = "Request not found")
-#
-#     update_data = request_api_request.model_dump(exclude_unset = True)
-#     api_request.sqlmodel_update(update_data)
-#
-#     session.add(api_request)
-#     session.commit()
-#     session.refresh(api_request)
-#
-#     return api_request

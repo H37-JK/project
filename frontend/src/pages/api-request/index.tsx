@@ -1,39 +1,44 @@
-import {IoLogoChrome, IoSearchOutline} from "react-icons/io5";
+import {IoLogoChrome} from "react-icons/io5";
 import {TbLayoutSidebarLeftCollapse} from "react-icons/tb";
 import {HiX} from "react-icons/hi";
 import {GoPlus} from "react-icons/go";
-import React, {useState} from "react";
-import SnippetComponent from "@/components/sql/SnippetComponent";
+import React, {useEffect, useState} from "react";
 import {IoIosArrowDown} from "react-icons/io";
-import ApiRequestData from "@/api/api-request/ApiRequestData";
 import {RiDeleteBin6Line} from "react-icons/ri";
 import {FaPlus} from "react-icons/fa6";
 import JsonEditor from "@/components/editor/JsonEditor";
 import { IoIosSave } from "react-icons/io";
 import {LuPencilLine} from "react-icons/lu";
 import {useSession} from "next-auth/react";
-import api from "@/lib/axios";
+import {createFetcher, deleteFetcher, getFetcher, updateFetcher} from "@/lib/axios";
 import useSWR from "swr";
-import { ApiRequest } from "@/constants/api";
+import {ApiRequest, ApiRequestUpdate} from "@/constants/api";
 import useSWRMutation from "swr/mutation";
 import SkeletonComponent from "@/components/skeleton/SkeletonComponent";
 import ToolTipComponent from "@/components/tooltip/TooltipComponent";
 import {CiTrash} from "react-icons/ci";
+import ApiRequestComponent from "@/components/api/api-request/ApiRequestComponent";
+import { useSWRConfig } from 'swr';
 
-const getFetcher = (url: string) => api.get(url).then(res => res.data)
-
-const createFetcher = async (url: string, {arg}: { arg: { data: any } }) => {
-    const res = await api.post(url, arg.data);
-    return res.data;
-}
-
-const deleteFetcher = async (url: string, {arg}: { arg: string }) => {
-    const res = await api.delete(`${url}/${arg}`);
-    return res.data;
-}
 
 export default function Home() {
     const {data: session, status} = useSession()
+    const { mutate } = useSWRConfig();
+    const [id, setId] = useState<string | null>(null)
+    const [requestData, setRequestData] = useState<ApiRequestUpdate>({
+        id: null,
+        name: null,
+        method: null,
+        url: null,
+        headers: [],
+        params: [],
+        body_type: null,
+        body_content: null,
+        auth_type: null,
+        auth_content: null,
+        tab_active: false,
+        update_at: null,
+    })
 
     const [isShowAlert, setIsShowAlert] = useState(false)
     const [isMenuToggle, setIsMenuToggle] = useState(true)
@@ -54,19 +59,53 @@ export default function Home() {
         setIsMenuToggle(!isMenuToggle)
     }
 
-    const {data: apis, isLoading, mutate} = useSWR<ApiRequest[]>('/get/api-requests', getFetcher)
+    const {data: apis, isLoading: apisIsLoading, mutate: apisMutate} = useSWR<ApiRequest[]>('/get/tab-active-api-requests', getFetcher)
+
+    const {data: api, isLoading: apiIsLoading, mutate: apiMutate} = useSWR<ApiRequest>(id ? `/get/api-request/${id}`: null, getFetcher)
+
+    useEffect(() => {
+        console.log(api)
+        if (api) {
+            setRequestData({
+                id: api.id,
+                name: api.name,
+                method: api.method,
+                url: api.url,
+                headers: api.headers,
+                params: api.params,
+                body_type: api.body_type,
+                body_content: api.body_content,
+                auth_type: api.auth_type,
+                auth_content: api.auth_content,
+                tab_active: api.tab_active,
+                update_at: api.update_at,
+            })
+        }
+    }, [api, id]);
 
     const {trigger: createTrigger, isMutating: createMutating} = useSWRMutation (
         '/create/api-request',
         createFetcher, {
-            onSuccess: () => mutate()
+            onSuccess: async () => {
+                await Promise.all([
+                    apisMutate(),
+                    apiMutate()
+                ]);
+            }
+        }
+    )
+
+    const {trigger: updateTrigger, isMutating: updateMutating} = useSWRMutation (
+        '/update/api-request',
+        updateFetcher, {
+            onSuccess: () => apisMutate()
         }
     )
 
     const {trigger: deleteTrigger, isMutating: deleteMutating} = useSWRMutation (
         '/delete/api-request',
-        createFetcher, {
-            onSuccess: () => mutate()
+        deleteFetcher, {
+            onSuccess: () => apisMutate()
         }
     )
 
@@ -74,6 +113,46 @@ export default function Home() {
         setSelectedId(id);
         setIsModalOpen(true);
     };
+
+    const createApiRequest = async () => {
+        try {
+            const data = {
+
+            }
+            await createTrigger({
+                data
+            })
+        } catch(error) {
+            console.error(error)
+        }
+    }
+
+    const deleteApiRequest = async(id: string) => {
+        try {
+            await deleteTrigger(id)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    const updateField = async (key: keyof ApiRequest, value: any) => {
+        const newData = {
+            ...requestData,
+            [key]: value
+        }
+        setRequestData(newData)
+        try {
+            await updateTrigger({
+                id,
+                data: newData
+            })
+        } catch(error) {
+            console.error(error)
+        }
+    }
+
+
+
 
 
     const jsonString = '{\n' +
@@ -120,7 +199,7 @@ export default function Home() {
     return (
         <div className="flex flex-1 overflow-hidden pl-0 md:pl-10">
             {/*메뉴*/}
-            <div style={{flex: '29.5 1 0px'}}
+            <div style={{flex: '23.5 1 0px'}}
                  className={`${isMenuToggle ? 'min-w-64 max-w-[32rem] border-r' : 'border-0 min-w-0 max-w-0 w-0'} hidden md:flex transition-all duration-150 ease-linear flex-col border-zinc-800 z-10 box-content overflow-hidden`}>
                 <div className="border-b border-zinc-800 min-h-10 px-4 flex items-center">
                     <h4 className="text-md">API 목록</h4>
@@ -128,19 +207,10 @@ export default function Home() {
                         <LuPencilLine onClick={() => setShowTrash(!showTrash)} className="h-4 w-4 text-zinc-400 cursor-pointer hover:text-zinc-300"/>
                     </div>
                 </div>
-                {/*테이블 검색*/}
-                <div className="p-3 border-b border-zinc-800">
-                    <div className="relative">
-                        <IoSearchOutline
-                            className="h-3 w-3 fill-transparentstroke-zinc-500 cursor-pointer absolute top-2 left-2"/>
-                        <input placeholder="API를 검색해 주세요." type="text"
-                               className="h-[26px] cursor-pointer text-xs px-2.5 pl-7 py-1 border outline-none border-zinc-800 rounded-md w-full focus:border-zinc-700"/>
-                    </div>
-                </div>
 
                 {/*스니펫 리스트*/}
                 <div className="flex flex-col text-sm overflow-auto border-zinc-800 mb-2">
-                    {isLoading && (
+                    {apisIsLoading && (
                         <div className="flex flex-col">
                             {[...Array(20)].map((_, i) => <SkeletonComponent key={i}/>)}
                         </div>
@@ -171,6 +241,43 @@ export default function Home() {
                         </div>
                     ))}
                 </div>
+            </div>
+
+            <div style={{flex: '4 1 0px'}}
+                 className={`${isMenuToggle ? 'border-r' : 'border-0 min-w-0 max-w-0 w-0'} hidden md:flex transition-all duration-150 ease-linear flex-col border-zinc-800 z-10 box-content overflow-hidden text-sm`}>
+                <div className="py-3 bg-zinc-900 hover:bg-zinc-800 cursor-pointer px-2">
+                    <svg data-v-73fac596="" viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons">
+                        <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path>
+                    </svg>
+                </div>
+                <div className="py-3 bg-zinc-900 hover:bg-zinc-800 cursor-pointer px-2">
+                    <svg data-v-73fac596="" viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons">
+                        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
+                           strokeWidth="2">
+                            <path d="M12 6v6l4 2"></path>
+                            <circle cx="12" cy="12" r="10"></circle>
+                        </g>
+                    </svg>
+                </div>
+                <div className="py-3 bg-zinc-900 hover:bg-zinc-800 cursor-pointer px-2">
+                    <svg data-v-73fac596="" viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons">
+                        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
+                           strokeWidth="2">
+                            <path
+                                d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"></path>
+                            <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"></path>
+                            <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"></path>
+                        </g>
+                    </svg>
+                </div>
+                <div className="py-3 bg-zinc-900 hover:bg-zinc-800 cursor-pointer px-2">
+                    <svg data-v-73fac596="" viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons">
+                        <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
+                              strokeWidth="2" d="m16 18l6-6l-6-6M8 6l-6 6l6 6"></path>
+                    </svg>
+                </div>
 
 
             </div>
@@ -187,44 +294,17 @@ export default function Home() {
                     </div>
 
                     {/*테이블 탭*/}
-                    <div className="border-r border-zinc-800 group cursor-pointer hover:opacity-90 hover:bg-zinc-800">
-                        <div
-                            className="text-xs gap-2 flex items-center justify-center flex-1 h-full px-2">
-                            <div className="gap-1 cursor-pointer flex ">
-                                <div className="text-green-400">GET</div>
-                                <div className="group-hover:text-white">아이템조회</div>
-                            </div>
-                            <div className="invisible group-hover:visible"><HiX
-                                className="h-3 w-3 fill-zinc-300  group-hover:fill-white"/></div>
-                        </div>
-                    </div>
-
-                    <div className="border-r border-zinc-800 group cursor-pointer hover:opacity-90 hover:bg-zinc-800">
-                        <div
-                            className="text-xs gap-2 flex items-center justify-center flex-1 h-full px-2">
-                            <div className="gap-1 cursor-pointer flex">
-                                <div className="text-green-400">GET</div>
-                                <div className="group-hover:text-white">아이템조회</div>
-                            </div>
-                            <div className="invisible group-hover:visible"><HiX
-                                className="h-3 w-3 fill-zinc-300  group-hover:fill-white"/></div>
-                        </div>
-                    </div>
-
-                    <div className="border-r border-zinc-800 group cursor-pointer hover:opacity-90 hover:bg-zinc-800">
-                        <div
-                            className="text-xs gap-2 flex items-center justify-center flex-1 h-full px-2">
-                            <div className="gap-1 cursor-pointer flex">
-                                <div className="text-green-400">GET</div>
-                                <div className="group-hover:text-white">아이템조회</div>
-                            </div>
-                            <div className="invisible group-hover:visible"><HiX
-                                className="h-3 w-3 fill-zinc-300  group-hover:fill-white"/></div>
-                        </div>
-                    </div>
+                    {apis && apis.map((data, key) => (
+                        <ApiRequestComponent onDelete={async() => {
+                            await deleteApiRequest(data.id)
+                        }} onGet={async() => {
+                            setId(data.id)
+                        }} key={key} name={data.name} method={data.method} />
+                    ))}
 
 
-                    <div className="cursor-pointer flex items-center px-3 hover:bg-zinc-700">
+
+                    <div onClick={() => createApiRequest()} className="cursor-pointer flex items-center px-3 hover:bg-zinc-700">
                         <div><GoPlus className="h-4 w-4 fill-gray-400 group-hover:fill-white"/></div>
                     </div>
 
@@ -239,7 +319,7 @@ export default function Home() {
                             <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
                         </div>
 
-                        <input
+                        <input value={requestData.url || ""} onChange={(e) => updateField('url', e.target.value)}
                             className="pl-1 rounded-r outline-none border-l-0 flex flex-1 border border-zinc-800 !bg-[#1c1c1e] pr-12"
                             type="text"/>
 

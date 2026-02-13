@@ -18,7 +18,7 @@ import SkeletonComponent from "@/components/skeleton/SkeletonComponent";
 
 
 export default function Home() {
-    const {data: session, status} = useSession()
+    const {data: session} = useSession()
     const [showTrash, setShowTrash] = useState(false)
     const [prompt, setPrompt] = useState('')
     const [isMenuToggle, setIsMenuToggle] = useState(true)
@@ -110,7 +110,7 @@ export default function Home() {
                 </div>
 
                 {/*에이전트 리스트*/}
-                <div className="flex flex-col text-sm overflow-auto border-zinc-800 mb-2">
+                <div className="flex flex-col text-sm overflow-hidden border-zinc-800 mb-2">
                     {isLoading && (
                         <div className="flex flex-col">
                             {[...Array(20)].map((_, i) => <SkeletonComponent key={i}/>)}

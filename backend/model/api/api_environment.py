@@ -12,7 +12,7 @@ from backend.model.user.user import User
 class ApiEnvironment(SQLModel, table = True):
     __tablename__ = "api_environment"
     id: UUID  = Field(default_factory = uuid4, primary_key = True)
-    name: str = Field(default = "none", max_length = 50)
+    name: str = Field(default = "Untitled", max_length = 50)
     variables: Dict[str, Any] = Field(default_factory = dict, sa_column = Column(JSONB))
     user_id: UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_environments")
@@ -21,7 +21,7 @@ class ApiEnvironment(SQLModel, table = True):
 
 
 class ApiEnvironmentCreate(SQLModel):
-    name: str = Field(default = "none", max_length = 50)
+    name: str = Field(default = "Untitled", max_length = 50)
     variables: Dict[str, Any] = Field(default_factory = dict)
 
 

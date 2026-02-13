@@ -15,7 +15,7 @@ from backend.logs.logging_route import LoggingRoute
 from backend.logs.logs import logger
 from backend.db.engine import create_db_and_tables
 from backend.routers.user import user
-from backend.routers.api import api_requeset
+from backend.routers.api import api_request
 from backend.routers.api import api_collection
 from backend.routers.api import api_envirionment
 from backend.routers.api import api_request_history
@@ -59,7 +59,7 @@ app.add_middleware (
 )
 
 app.include_router(user.router)
-app.include_router(api_requeset.router)
+app.include_router(api_request.router)
 app.include_router(api_collection.router)
 app.include_router(api_envirionment.router)
 app.include_router(api_request_history.router)
