@@ -1,6 +1,5 @@
 import {IoLogoChrome} from "react-icons/io5";
 import {TbLayoutSidebarLeftCollapse} from "react-icons/tb";
-import {HiX} from "react-icons/hi";
 import {GoPlus} from "react-icons/go";
 import React, {useEffect, useRef, useState} from "react";
 import {IoIosArrowDown} from "react-icons/io";
@@ -19,13 +18,17 @@ import ToolTipComponent from "@/components/tooltip/TooltipComponent";
 import {CiTrash} from "react-icons/ci";
 import ApiRequestComponent from "@/components/api/api-request/ApiRequestComponent";
 import { useSWRConfig } from 'swr';
-
+import HttpMethodDropdown from "@/components/dropdown/HttpMethodDropdown";
 
 export default function Home() {
     const {data: session, status} = useSession()
     const { mutate: globalMutate } = useSWRConfig();
-    const saveTimerRef = useRef<string | null>(null)
+    const saveTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+    const latestIdRef = useRef<string | null>(null);
     const [id, setId] = useState<string | null>(null)
+    const [isHttpMethodOpen, setIsHttpMethodOpen] = useState<boolean>(false)
+    const [selectedHttpMethod, setSelectedHttpMethod] = useState<string | null>('GET')
+
     const [requestData, setRequestData] = useState<ApiRequestUpdate>({
         id: null,
         name: null,
@@ -62,6 +65,7 @@ export default function Home() {
 
     const {data: apis, isLoading: apisIsLoading, mutate: apisMutate} = useSWR<ApiRequest[]>('/get/tab-active-api-requests', getFetcher)
 
+    const apiKey = id ? `/get/api-request/${id}` : null;
     const {data: api, isLoading: apiIsLoading, mutate: apiMutate} = useSWR<ApiRequest>(id ? `/get/api-request/${id}`: null, getFetcher)
 
     useEffect(() => {
@@ -83,6 +87,21 @@ export default function Home() {
         }
     }, [api, id]);
 
+    useEffect(() => {
+        latestIdRef.current = id;
+
+        if (saveTimerRef.current) {
+            window.clearTimeout(saveTimerRef.current);
+            saveTimerRef.current = null;
+        }
+    }, [id]);
+
+    useEffect(() => {
+        return () => {
+            if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+        };
+    }, []);
+
     const {trigger: createTrigger, isMutating: createMutating} = useSWRMutation (
         '/create/api-request',
         createFetcher, {
@@ -98,7 +117,12 @@ export default function Home() {
     const {trigger: updateTrigger, isMutating: updateMutating} = useSWRMutation (
         '/update/api-request',
         updateFetcher, {
-            onSuccess: (_data, _key, arg) => apisMutate()
+            onSuccess: async () => {
+                await Promise.all([
+                    apisMutate(),
+                    apiKey ? globalMutate(apiKey) : Promise.resolve()
+                ]);
+            }
         }
     )
 
@@ -135,25 +159,44 @@ export default function Home() {
         }
     }
 
+    const persistUpdate = (targetId: string, newData: ApiRequestUpdate) => {
+        if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+
+        // @ts-ignore
+        saveTimerRef.current = window.setTimeout(async () => {
+            if (latestIdRef.current !== targetId) return;
+
+            try {
+                const targetKey = `/get/api-request/${targetId}`;
+
+                await globalMutate (
+                    targetKey,
+                    (prev: ApiRequest | undefined) => {
+                        if (!prev) return prev as any;
+                        return { ...prev, ...(newData as any) };
+                    },
+                    { revalidate: false }
+                );
+
+                await updateTrigger({
+                    id: targetId,
+                    data: newData
+                });
+
+            } catch (error) {
+                await globalMutate(`/get/api-request/${targetId}`);
+                console.error(error);
+            }
+        }, 100);
+    };
+
     const updateField = async (key: keyof ApiRequest, value: any) => {
         const newData = {
             ...requestData,
             [key]: value
         }
         setRequestData(newData)
-
-        if (!id) return
-
-
-
-        try {
-            await updateTrigger({
-                id,
-                data: newData
-            })
-        } catch(error) {
-            console.error(error)
-        }
+        if (id) persistUpdate(id, newData);
     }
 
 
@@ -318,9 +361,10 @@ export default function Home() {
                 <div className="text-[12px] min-h-[420px] border-b border-zinc-800">
                     {/*요청입력*/}
                     <div className="flex text-[12px] rounded p-2">
-                        <div
-                            className="flex rounded-l items-center border border-r-0  text-green-400 cursor-pointer !bg-[#1c1c1e] border-zinc-800 py-1.5 px-5 pl-3 outline-none space-x-5">
-                            <div>GET</div>
+                        <div onClick={() => setIsHttpMethodOpen(!isHttpMethodOpen)}
+                            className="flex rounded-l relative items-center border border-r-0  text-green-400 cursor-pointer !bg-[#1c1c1e] border-zinc-800 py-1.5 px-5 pl-3 outline-none space-x-5">
+                            <div>{requestData.method}</div>
+                            {isHttpMethodOpen && <HttpMethodDropdown isHttpMethodOpen={isHttpMethodOpen} setIsHttpMethodOpen={setIsHttpMethodOpen} setSelectedHttpMethod={setSelectedHttpMethod}/>}
                             <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
                         </div>
 
