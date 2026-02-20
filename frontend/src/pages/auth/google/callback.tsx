@@ -21,7 +21,7 @@ export default function GoogleCallback() {
                 if (result?.ok) {
                     router.push("/");
                 } else {
-                    router.push("/login?error=google_login_failed");
+                    router.push("/auth");
                 }
             });
         } else if (router.isReady && !access_token) {

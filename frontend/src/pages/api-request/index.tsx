@@ -2,7 +2,7 @@ import {IoLogoChrome} from "react-icons/io5";
 import {TbLayoutSidebarLeftCollapse} from "react-icons/tb";
 import {HiX} from "react-icons/hi";
 import {GoPlus} from "react-icons/go";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {IoIosArrowDown} from "react-icons/io";
 import {RiDeleteBin6Line} from "react-icons/ri";
 import {FaPlus} from "react-icons/fa6";
@@ -23,7 +23,8 @@ import { useSWRConfig } from 'swr';
 
 export default function Home() {
     const {data: session, status} = useSession()
-    const { mutate } = useSWRConfig();
+    const { mutate: globalMutate } = useSWRConfig();
+    const saveTimerRef = useRef<string | null>(null)
     const [id, setId] = useState<string | null>(null)
     const [requestData, setRequestData] = useState<ApiRequestUpdate>({
         id: null,
@@ -64,7 +65,6 @@ export default function Home() {
     const {data: api, isLoading: apiIsLoading, mutate: apiMutate} = useSWR<ApiRequest>(id ? `/get/api-request/${id}`: null, getFetcher)
 
     useEffect(() => {
-        console.log(api)
         if (api) {
             setRequestData({
                 id: api.id,
@@ -98,7 +98,7 @@ export default function Home() {
     const {trigger: updateTrigger, isMutating: updateMutating} = useSWRMutation (
         '/update/api-request',
         updateFetcher, {
-            onSuccess: () => apisMutate()
+            onSuccess: (_data, _key, arg) => apisMutate()
         }
     )
 
@@ -141,6 +141,11 @@ export default function Home() {
             [key]: value
         }
         setRequestData(newData)
+
+        if (!id) return
+
+
+
         try {
             await updateTrigger({
                 id,
@@ -209,7 +214,7 @@ export default function Home() {
                 </div>
 
                 {/*스니펫 리스트*/}
-                <div className="flex flex-col text-sm overflow-auto border-zinc-800 mb-2">
+                <div className="flex flex-col text-sm overflow-hidden border-zinc-800 mb-2">
                     {apisIsLoading && (
                         <div className="flex flex-col">
                             {[...Array(20)].map((_, i) => <SkeletonComponent key={i}/>)}
@@ -243,16 +248,16 @@ export default function Home() {
                 </div>
             </div>
 
-            <div style={{flex: '4 1 0px'}}
-                 className={`${isMenuToggle ? 'border-r' : 'border-0 min-w-0 max-w-0 w-0'} hidden md:flex transition-all duration-150 ease-linear flex-col border-zinc-800 z-10 box-content overflow-hidden text-sm`}>
-                <div className="py-3 bg-zinc-900 hover:bg-zinc-800 cursor-pointer px-2">
+            <div
+                 className={`${isMenuToggle ? 'border-r max-w-10' : 'border-0 min-w-0 max-w-0 w-0'} hidden md:flex transition-all duration-150 ease-linear flex-col border-zinc-800 !bg-[#171717] z-10 box-content overflow-hidden text-sm`}>
+                <div className="py-3 !bg-[#171717] hover:bg-zinc-800 cursor-pointer px-2">
                     <svg data-v-73fac596="" viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons">
                         <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
                               strokeWidth="2"
                               d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path>
                     </svg>
                 </div>
-                <div className="py-3 bg-zinc-900 hover:bg-zinc-800 cursor-pointer px-2">
+                <div className="py-3 !bg-[#171717] hover:bg-zinc-800 cursor-pointer px-2">
                     <svg data-v-73fac596="" viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons">
                         <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
                            strokeWidth="2">
@@ -261,7 +266,7 @@ export default function Home() {
                         </g>
                     </svg>
                 </div>
-                <div className="py-3 bg-zinc-900 hover:bg-zinc-800 cursor-pointer px-2">
+                <div className="py-3 !bg-[#171717] hover:bg-zinc-800 cursor-pointer px-2">
                     <svg data-v-73fac596="" viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons">
                         <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
                            strokeWidth="2">
@@ -272,7 +277,7 @@ export default function Home() {
                         </g>
                     </svg>
                 </div>
-                <div className="py-3 bg-zinc-900 hover:bg-zinc-800 cursor-pointer px-2">
+                <div className="py-3 !bg-[#171717] hover:bg-zinc-800 cursor-pointer px-2">
                     <svg data-v-73fac596="" viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons">
                         <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
                               strokeWidth="2" d="m16 18l6-6l-6-6M8 6l-6 6l6 6"></path>
@@ -299,7 +304,7 @@ export default function Home() {
                             await deleteApiRequest(data.id)
                         }} onGet={async() => {
                             setId(data.id)
-                        }} key={key} name={data.name} method={data.method} />
+                        }} isActive={id === data.id} key={key} name={data.name} method={data.method} />
                     ))}
 
 

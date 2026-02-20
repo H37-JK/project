@@ -6,11 +6,12 @@ interface ApiRequestComponentProps {
     method: string;
     onDelete: () => void;
     onGet: () => void;
+    isActive: boolean;
 }
 
-const ApiRequestComponent = ({name, method, onDelete, onGet} : ApiRequestComponentProps) => {
+const ApiRequestComponent = ({name, method, onDelete, onGet, isActive} : ApiRequestComponentProps) => {
     return (
-        <div onClick={() => onGet()} className="border-r border-zinc-800 group cursor-pointer hover:opacity-90 hover:bg-zinc-800">
+        <div onClick={() => onGet()} className={"border-r border-zinc-800 group cursor-pointer hover:opacity-90 hover:bg-zinc-800 " + ( isActive ?  "opacity-90 bg-zinc-800" : "")}>
             <div
                 className="text-xs gap-2 flex items-center justify-center flex-1 h-full px-2">
                 <div className="gap-1 cursor-pointer flex ">
