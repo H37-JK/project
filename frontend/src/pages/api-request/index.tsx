@@ -199,7 +199,13 @@ export default function Home() {
         if (id) persistUpdate(id, newData);
     }
 
-
+    const updateMethod = async (key: keyof ApiRequest,  value: any) => {
+        const newData = {
+            ...requestData,
+            [key]: value
+        }
+        setRequestData(newData)
+    }
 
 
 
