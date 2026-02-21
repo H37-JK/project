@@ -23,6 +23,7 @@ class ApiRequest(SQLModel, table = True):
     auth_type: str | None = Field(default = None, max_length = 50)
     auth_content: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
     tab_active: bool = Field(default = True)
+    is_deletable: bool = Field(default = True)
     user_id:  UUID = Field(foreign_key = "user.id", ondelete = "CASCADE")
     user: User = Relationship(back_populates = "api_requests")
     api_collection_id: UUID | None = Field(default = None, foreign_key = "api_collection.id", ondelete = "CASCADE")
@@ -68,7 +69,7 @@ class ApiRequestUpdateResponse(SQLModel):
 
 class ApiRequestCall(SQLModel):
     id: UUID
-    name: str
+    name: str | None = Field(default = None)
     method: str = Field(max_length = 50)
     url: str = Field(max_length = 50)
     headers: List[Dict[str, Any]]  = Field(default_factory = list)

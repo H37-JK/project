@@ -1,11 +1,15 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import {ApiRequest, ApiRequestUpdate} from "@/constants/api";
 
 interface HttpMethodDropdownProps {
     isHttpMethodOpen: boolean
     setIsHttpMethodOpen: (selectedHttpMethod: boolean) => void
     setSelectedHttpMethod: (label: string) => void
+    updateMethod: (key: keyof ApiRequestUpdate, value: any) => void
 }
 
-const HttpMethodDropdown = ({isHttpMethodOpen, setIsHttpMethodOpen, setSelectedHttpMethod} : HttpMethodDropdownProps) => {
+const HttpMethodDropdown = ({isHttpMethodOpen, setIsHttpMethodOpen, setSelectedHttpMethod, updateMethod} : HttpMethodDropdownProps) => {
+
 
     const methods = [
         { label: 'GET', color: 'text-emerald-400' },
@@ -23,7 +27,16 @@ const HttpMethodDropdown = ({isHttpMethodOpen, setIsHttpMethodOpen, setSelectedH
     return (
         <>
                 {isHttpMethodOpen && (
-                    <div className="absolute top-4 left-8 z-10 w-48 mt-3 origin-top-left bg-[#1a1a1a] border border-zinc-800 rounded-md shadow-2xl focus:outline-none">
+                    <AnimatePresence>
+                    <motion.div
+                        initial={{ opacity: 0, y: -1, scale: 1 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -1, scale: 1 }}
+                        transition={{ duration: 0.1, ease: "easeOut" }}
+                         className={`absolute top-4 left-8 z-10 w-48 mt-3 origin-top-left bg-[#1a1a1a] border 
+                         border-zinc-800 rounded-md shadow-2xl focus:outline-none 
+                         transition-all duration-2200 ease-out ${isHttpMethodOpen ? 'opacity-100 scale-100 translate-y-0 visible' : 'opacity-0 scale-95 -translate-y-2 invisible'}`}
+                    >
                         <div className="absolute -top-1.5 left-8 w-3 h-3 bg-[#1a1a1a] border-t border-l border-zinc-800 rotate-45"></div>
                         <div className="py-2 overflow-hidden rounded-md">
                             {methods.map((method) => (
@@ -32,6 +45,7 @@ const HttpMethodDropdown = ({isHttpMethodOpen, setIsHttpMethodOpen, setSelectedH
                                     onClick={() => {
                                         setIsHttpMethodOpen(false);
                                         setSelectedHttpMethod(method.label);
+                                        updateMethod('method', method.label)
                                     }}
                                     className={`cursor-pointer block w-full px-5 py-2.5 text-left text-sm font-bold transition-colors hover:bg-zinc-800 ${method.color}`}
                                 >
@@ -39,7 +53,8 @@ const HttpMethodDropdown = ({isHttpMethodOpen, setIsHttpMethodOpen, setSelectedH
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </motion.div>
+                    </AnimatePresence>
                 )}
         </>
     );

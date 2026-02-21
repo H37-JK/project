@@ -15,7 +15,7 @@ api.interceptors.request.use(async (config) => {
 
 export const getFetcher = (url: string) => api.get(url).then(res => res.data)
 
-export const createFetcher = async (url: string, {arg}: { arg: { data: any } }) => {
+export const postFetcher = async (url: string, {arg}: { arg: { data: any } }) => {
     const res = await api.post(url, arg.data);
     return res.data;
 }

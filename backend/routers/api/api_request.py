@@ -135,6 +135,7 @@ async def call_api_request (
     session.add(api_request)
     session.add(api_request_history)
     session.commit()
+    session.refresh(api_request)
     session.refresh(api_request_history)
 
     return api_request_history

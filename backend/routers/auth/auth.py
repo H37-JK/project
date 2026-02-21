@@ -9,7 +9,8 @@ from starlette.responses import RedirectResponse
 
 from backend.db.engine import SessionDep
 from backend.logs.logging_route import LoggingRoute
-from backend.model import User
+from backend.model import User, ApiRequest
+from backend.model.api.api_request import ApiRequestCreate
 from backend.passlib.jwt_token import create_access_token
 from backend.schemas.token import Token
 GOOGLE_REDIRECT_URI = "http://localhost:8000/auth/callback/google"
@@ -69,6 +70,24 @@ async def auth (
     session.add(user)
     session.commit()
     session.refresh(user)
+
+    api_request_create = ApiRequestCreate (
+
+    )
+    api_request = ApiRequest.model_validate (
+        api_request_create,
+        update = {
+            "user_id": user.id,
+            "api_collection_id": None,
+            "is_deletable": False,
+        }
+    )
+
+    session.add(api_request)
+    session.commit()
+    session.refresh(api_request)
+
+
 
     data = {"id": user.id}
     access_token = create_access_token(data)

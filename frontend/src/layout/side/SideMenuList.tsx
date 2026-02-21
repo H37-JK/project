@@ -53,29 +53,29 @@ const SideMenuList = () => {
                     </div>
                 </div>
             </Link>
-            <Link href="/">
-                <div
-                    className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-50 space-x-2">
-                    <div>
-                        <CiViewTable className="h-5 w-5 text-[rgb(137,137,137)] cursor-pointer group-hover:text-white"/>
-                    </div>
-                    <div className="hidden group-hover:flex whitespace-nowrap">
-                       데이터베이스
-                    </div>
-                </div>
-            </Link>
-            <Link href="/sql">
-                <div
-                    className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">
-                    <div>
-                        <RiTerminalBoxFill
-                            className="h-5 w-5 text-[rgb(137,137,137)] cursor-pointer group-hover:text-zinc-200"/>
-                    </div>
-                    <div className="hidden group-hover:flex whitespace-nowrap">
-                        쿼리 에디터
-                    </div>
-                </div>
-            </Link>
+            {/*<Link href="/">*/}
+            {/*    <div*/}
+            {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-50 space-x-2">*/}
+            {/*        <div>*/}
+            {/*            <CiViewTable className="h-5 w-5 text-[rgb(137,137,137)] cursor-pointer group-hover:text-white"/>*/}
+            {/*        </div>*/}
+            {/*        <div className="hidden group-hover:flex whitespace-nowrap">*/}
+            {/*           데이터베이스*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</Link>*/}
+            {/*<Link href="/sql">*/}
+            {/*    <div*/}
+            {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
+            {/*        <div>*/}
+            {/*            <RiTerminalBoxFill*/}
+            {/*                className="h-5 w-5 text-[rgb(137,137,137)] cursor-pointer group-hover:text-zinc-200"/>*/}
+            {/*        </div>*/}
+            {/*        <div className="hidden group-hover:flex whitespace-nowrap">*/}
+            {/*            쿼리 에디터*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</Link>*/}
             <Link href="/storage" prefetch={false}>
                 <div
                     className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">

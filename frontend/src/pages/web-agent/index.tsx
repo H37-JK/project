@@ -5,7 +5,7 @@ import {MdSubdirectoryArrowLeft} from "react-icons/md";
 import {TbLayoutSidebarLeftCollapse} from "react-icons/tb";
 import {useSession} from "next-auth/react";
 import useSWR from "swr";
-import {createFetcher, deleteFetcher, getFetcher} from '@/lib/axios';
+import {postFetcher, deleteFetcher, getFetcher} from '@/lib/axios';
 import useSWRMutation from "swr/mutation";
 import {Agent} from "@/constants/agent";
 import AgentView from "@/components/agent/AgentView";
@@ -42,7 +42,7 @@ export default function Home() {
 
     const {trigger: createTrigger, isMutating: createMutating} = useSWRMutation(
         '/create/agent',
-        createFetcher, {
+        postFetcher, {
             onSuccess: () => mutate()
         }
     )

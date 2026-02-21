@@ -9,9 +9,9 @@ import JsonEditor from "@/components/editor/JsonEditor";
 import { IoIosSave } from "react-icons/io";
 import {LuPencilLine} from "react-icons/lu";
 import {useSession} from "next-auth/react";
-import {createFetcher, deleteFetcher, getFetcher, updateFetcher} from "@/lib/axios";
+import {postFetcher, deleteFetcher, getFetcher, updateFetcher} from "@/lib/axios";
 import useSWR from "swr";
-import {ApiRequest, ApiRequestUpdate} from "@/constants/api";
+import {ApiRequest, ApiRequestHistory, ApiRequestUpdate} from "@/constants/api";
 import useSWRMutation from "swr/mutation";
 import SkeletonComponent from "@/components/skeleton/SkeletonComponent";
 import ToolTipComponent from "@/components/tooltip/TooltipComponent";
@@ -19,6 +19,8 @@ import {CiTrash} from "react-icons/ci";
 import ApiRequestComponent from "@/components/api/api-request/ApiRequestComponent";
 import { useSWRConfig } from 'swr';
 import HttpMethodDropdown from "@/components/dropdown/HttpMethodDropdown";
+import ConfirmModal from "@/components/modal/ConfirmModal";
+import {json} from "@codemirror/lang-json";
 
 export default function Home() {
     const {data: session, status} = useSession()
@@ -44,6 +46,37 @@ export default function Home() {
         update_at: null,
     })
 
+    const [historyData, setHistoryData] = useState<ApiRequestHistory>({
+        id: null,
+        method: null,
+        url: null,
+        header_sent: null,
+        body_sent: null,
+        staus_code: null,
+        duration_ms: null,
+        response_size: null,
+        response_body: null,
+        response_headers: null,
+        error_message: null
+    })
+
+    const methodColorMap: Record<string, string> = {
+        GET: "text-emerald-400",
+        POST: "text-amber-500",
+        PUT: "text-sky-400",
+        PATCH: "text-purple-400",
+        DELETE: "text-red-500",
+        HEAD: "text-teal-400",
+        OPTIONS: "text-indigo-400",
+        CONNECT: "text-zinc-400",
+        TRACE: "text-zinc-400",
+        CUSTOM: "text-zinc-400",
+    };
+
+    const methodColor = requestData.method
+        ? methodColorMap[requestData.method] ?? "text-zinc-400"
+        : "text-zinc-400";
+
     const [isShowAlert, setIsShowAlert] = useState(false)
     const [isMenuToggle, setIsMenuToggle] = useState(true)
     const [showTrash, setShowTrash] = useState(false)
@@ -63,10 +96,36 @@ export default function Home() {
         setIsMenuToggle(!isMenuToggle)
     }
 
-    const {data: apis, isLoading: apisIsLoading, mutate: apisMutate} = useSWR<ApiRequest[]>('/get/tab-active-api-requests', getFetcher)
+    const dropdownRef = useRef<HTMLDivElement | null>(null)
 
+    useEffect(() => {
+        if (!isHttpMethodOpen) return
+
+        const onPointerDown = (e: PointerEvent) => {
+            const element = dropdownRef.current
+            if (!element) return
+
+            if (!element.contains(e.target as Node)) {
+                setIsHttpMethodOpen(false)
+            }
+        }
+
+        document.addEventListener("pointerdown", onPointerDown, true)
+
+        return () => {
+            document.removeEventListener("pointerdown", onPointerDown, true)
+        }
+    }, [isHttpMethodOpen, setIsHttpMethodOpen]);
+
+    const {data: apis, isLoading: apisIsLoading, mutate: apisMutate} = useSWR<ApiRequest[]>('/get/tab-active-api-requests', getFetcher)
     const apiKey = id ? `/get/api-request/${id}` : null;
     const {data: api, isLoading: apiIsLoading, mutate: apiMutate} = useSWR<ApiRequest>(id ? `/get/api-request/${id}`: null, getFetcher)
+
+    useEffect(() => {
+        if (!apis || apis.length == 0) return
+        if (id) return
+        setId(apis[0].id)
+    }, [apis, id]);
 
     useEffect(() => {
         if (api) {
@@ -104,7 +163,7 @@ export default function Home() {
 
     const {trigger: createTrigger, isMutating: createMutating} = useSWRMutation (
         '/create/api-request',
-        createFetcher, {
+        postFetcher, {
             onSuccess: async () => {
                 await Promise.all([
                     apisMutate(),
@@ -133,6 +192,18 @@ export default function Home() {
         }
     )
 
+    const {trigger: callTrigger, isMutating: callMutating} = useSWRMutation (
+        '/call/api-request',
+        postFetcher, {
+            onSuccess: async () => {
+                await Promise.all([
+                    apisMutate(),
+                    apiMutate()
+                ]);
+            }
+        }
+    )
+
     const handleDeleteClick = (id: string) => {
         setSelectedId(id);
         setIsModalOpen(true);
@@ -151,11 +222,27 @@ export default function Home() {
         }
     }
 
-    const deleteApiRequest = async(id: string) => {
+    const deleteApiRequest = async (id: string) => {
         try {
             await deleteTrigger(id)
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    const callApiRequest = async (id: string) => {
+        try {
+            const data = {
+                id,
+                'url': requestData.url,
+                'method': requestData.method
+            }
+            const res: ApiRequestHistory = await callTrigger({
+                data
+            })
+            setHistoryData(res)
+        } catch (error) {
+            console.error(error)
         }
     }
 
@@ -190,7 +277,7 @@ export default function Home() {
         }, 100);
     };
 
-    const updateField = async (key: keyof ApiRequest, value: any) => {
+    const updateField = async (key: keyof ApiRequestUpdate, value: any) => {
         const newData = {
             ...requestData,
             [key]: value
@@ -199,13 +286,27 @@ export default function Home() {
         if (id) persistUpdate(id, newData);
     }
 
-    const updateMethod = async (key: keyof ApiRequest,  value: any) => {
+    const updateMethod = async (key: keyof ApiRequestUpdate,  value: any) => {
         const newData = {
             ...requestData,
             [key]: value
         }
         setRequestData(newData)
+        if (id) persistUpdate(id,  newData)
     }
+
+    const pretty = (() => {
+        const body = historyData?.response_body;
+        if (!body) return "";
+
+        if (typeof body === "object") return JSON.stringify(body, null, 2);
+
+
+        try {
+            return JSON.stringify(JSON.parse(body), null, 2);
+        } catch {
+        }
+    })();
 
 
 
@@ -336,6 +437,18 @@ export default function Home() {
 
             </div>
 
+            {/*<ConfirmModal*/}
+            {/*    isOpen={isModalOpen}*/}
+            {/*    title="해당 에이전트를 삭제하시겠습니까?"*/}
+            {/*    message="삭제된 에이전트는 복구가 불가능 합니다."*/}
+            {/*    onCancel={() => setIsModalOpen(false)}*/}
+            {/*    onConfirm={async () => {*/}
+            {/*        if (selectedId) {*/}
+            {/*            await deleteAgent(selectedId);*/}
+            {/*        }*/}
+            {/*    }}*/}
+            {/*/>*/}
+
             <div style={{flex: '70.5 1 0px'}} className="flex flex-col overflow-hidden">
                 {/*컨텐츠*/}
                 {/*테이블 선택 리스트*/}
@@ -353,9 +466,8 @@ export default function Home() {
                             await deleteApiRequest(data.id)
                         }} onGet={async() => {
                             setId(data.id)
-                        }} isActive={id === data.id} key={key} name={data.name} method={data.method} />
+                        }} isDeletable={data.is_deletable} isActive={id === data.id} key={key} name={data.name} method={data.method} />
                     ))}
-
 
 
                     <div onClick={() => createApiRequest()} className="cursor-pointer flex items-center px-3 hover:bg-zinc-700">
@@ -367,10 +479,10 @@ export default function Home() {
                 <div className="text-[12px] min-h-[420px] border-b border-zinc-800">
                     {/*요청입력*/}
                     <div className="flex text-[12px] rounded p-2">
-                        <div onClick={() => setIsHttpMethodOpen(!isHttpMethodOpen)}
+                        <div ref={dropdownRef} onClick={() => setIsHttpMethodOpen(!isHttpMethodOpen)}
                             className="flex rounded-l relative items-center border border-r-0  text-green-400 cursor-pointer !bg-[#1c1c1e] border-zinc-800 py-1.5 px-5 pl-3 outline-none space-x-5">
-                            <div>{requestData.method}</div>
-                            {isHttpMethodOpen && <HttpMethodDropdown isHttpMethodOpen={isHttpMethodOpen} setIsHttpMethodOpen={setIsHttpMethodOpen} setSelectedHttpMethod={setSelectedHttpMethod}/>}
+                            <div className={`font-bold ${methodColor}`}>{requestData.method}</div>
+                            {isHttpMethodOpen && <HttpMethodDropdown updateMethod={updateMethod} isHttpMethodOpen={isHttpMethodOpen} setIsHttpMethodOpen={setIsHttpMethodOpen} setSelectedHttpMethod={setSelectedHttpMethod}/>}
                             <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
                         </div>
 
@@ -378,7 +490,7 @@ export default function Home() {
                             className="pl-1 rounded-r outline-none border-l-0 flex flex-1 border border-zinc-800 !bg-[#1c1c1e] pr-12"
                             type="text"/>
 
-                        <button type="button"
+                        <button type="button" onClick={() => callApiRequest(id!)}
                                 className="rounded bg-blue-700 cursor-pointer hover:bg-blue-600 px-4 py-1 ml-2">보내기
                         </button>
 
@@ -398,9 +510,6 @@ export default function Home() {
                         </div>
                         <div className="hover:font-bold cursor-pointer relative">
                             <div className="tab">헤더</div>
-                        </div>
-                        <div className="hover:font-bold cursor-pointer relative">
-                            <div className="tab">파라미터</div>
                         </div>
                         <div className="hover:font-bold cursor-pointer relative">
                             <div className="tab">인증</div>
@@ -447,9 +556,6 @@ export default function Home() {
                                 <div className="tab active">JSON</div>
                             </div>
                             <div className="hover:font-bold cursor-pointer relative">
-                                <div className="tab">RAW</div>
-                            </div>
-                            <div className="hover:font-bold cursor-pointer relative">
                                 <div className="tab">헤더</div>
                             </div>
                             <div className="hover:font-bold cursor-pointer relative">
@@ -463,9 +569,8 @@ export default function Home() {
                     </div>
 
                    <div className="overflow-auto flex flex-1">
-                       <JsonEditor
-                           value={jsonString}
-                       />
+                            {historyData?.response_body
+                            ? (<JsonEditor value={pretty} />) : ""}
                    </div>
 
 
