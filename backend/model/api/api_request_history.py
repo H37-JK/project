@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
@@ -20,8 +20,8 @@ class ApiRequestHistory(SQLModel, table = True):
     status_code: int
     duration_ms: int
     response_size: int
-    response_body: Dict[str, Any] | None = Field(default = None, sa_column = Column(JSONB))
-    response_headers: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
+    response_body: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
+    response_headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
     error_message: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
     api_request_id: UUID = Field(foreign_key = "api_request.id", ondelete = "CASCADE")
     api_request: ApiRequest = Relationship(back_populates = "api_request_history")
@@ -38,7 +38,7 @@ class ApiRequestHistoryResponse(SQLModel):
     status_code: int
     duration_ms: int
     response_size: int
-    response_body: Dict[str, Any] | None = Field(default = None)
-    response_headers: Dict[str, Any] | None = Field(default = None)
+    response_body: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
+    response_headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
     error_message: Dict[str, Any] | None = Field(default = None)
 

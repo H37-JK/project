@@ -156,6 +156,11 @@ export default function Home() {
     }, [id]);
 
     useEffect(() => {
+        if (!apis || apis.length == 0) return
+        setId(apis[apis.length - 1].id)
+    }, [apis]);
+
+    useEffect(() => {
         return () => {
             if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
         };
@@ -188,7 +193,12 @@ export default function Home() {
     const {trigger: deleteTrigger, isMutating: deleteMutating} = useSWRMutation (
         '/delete/api-request',
         deleteFetcher, {
-            onSuccess: () => apisMutate()
+            onSuccess: async () => {
+                await Promise.all([
+                    apisMutate(),
+                    apiKey ? globalMutate(apiKey) : Promise.resolve()
+                ]);
+            }
         }
     )
 
@@ -198,7 +208,7 @@ export default function Home() {
             onSuccess: async () => {
                 await Promise.all([
                     apisMutate(),
-                    apiMutate()
+                    apiKey ? globalMutate(apiKey) : Promise.resolve()
                 ]);
             }
         }
@@ -563,7 +573,6 @@ export default function Home() {
                             </div>
                         </div>
                     </div>
-
                     <div className="border-zinc-800 border-b p-2 text-sm text-zinc-400 text-[11px] font-bold">
                         응답 본문
                     </div>
@@ -572,8 +581,6 @@ export default function Home() {
                             {historyData?.response_body
                             ? (<JsonEditor value={pretty} />) : ""}
                    </div>
-
-
                 </div>
 
             </div>

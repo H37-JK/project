@@ -3,7 +3,7 @@ from uuid import UUID
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select, desc
-from typing import Annotated
+from typing import Annotated, Union, Dict, Any, List
 
 from backend.helper.date import get_utc_now
 from backend.helper.server_info import extract_domain_https
@@ -29,6 +29,14 @@ def build_options(option_list):
             options[option["key"]] = option["value"]
     return options
 
+def ensure_list_of_dicts(v: Union[None, Dict[str, Any], List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    if v is None:
+        return []
+    if isinstance(v, list):
+        return v
+    if isinstance(v, dict):
+        return [v]
+    raise TypeError(f"response_headers must be list[dict], got {type(v)}")
 
 @router.get("/get/tab-active-api-requests")
 async def get_api_requests (
@@ -124,8 +132,8 @@ async def call_api_request (
         status_code = status_code,
         duration_ms = duration_ms,
         response_size = response_size,
-        response_body = response_body,
-        response_headers = response_headers,
+        response_body = ensure_list_of_dicts(response_body),
+        response_headers = ensure_list_of_dicts(response_headers),
         error_message = error_message,
         api_request_id = api_request.id,
         api_collection_id = None,

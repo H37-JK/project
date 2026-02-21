@@ -143,7 +143,6 @@ export default function Home() {
                     ))}
                 </div>
             </div>
-
             <div style={{flex: '84.5 1 0px'}} className="flex flex-1 flex-col overflow-hidden">
                 {/*컨텐츠*/}
                 <div className="border-b border-zinc-800 min-h-10 flex">
