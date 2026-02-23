@@ -128,11 +128,6 @@ export default function Home() {
         mutate: apiMutate
     } = useSWR<ApiRequest>(id ? `/get/api-request/${id}` : null, getFetcher)
 
-    useEffect(() => {
-        if (!apis || apis.length == 0) return
-        if (id) return
-        setId(apis[0].id)
-    }, [apis, id]);
 
     useEffect(() => {
         if (api) {
@@ -162,10 +157,7 @@ export default function Home() {
         }
     }, [id]);
 
-    useEffect(() => {
-        if (!apis || apis.length == 0) return
-        setId(apis[apis.length - 1].id)
-    }, [apis]);
+
 
     useEffect(() => {
         return () => {
@@ -176,11 +168,12 @@ export default function Home() {
     const {trigger: createTrigger, isMutating: createMutating} = useSWRMutation(
         '/create/api-request',
         postFetcher, {
-            onSuccess: async () => {
+            onSuccess: async (data) => {
                 await Promise.all([
                     apisMutate(),
                     apiMutate()
                 ]);
+                if (data?.id) setId(data.id);
             }
         }
     )
@@ -200,11 +193,14 @@ export default function Home() {
     const {trigger: deleteTrigger, isMutating: deleteMutating} = useSWRMutation(
         '/delete/api-request',
         deleteFetcher, {
-            onSuccess: async () => {
-                await Promise.all([
-                    apisMutate(),
-                    apiKey ? globalMutate(apiKey) : Promise.resolve()
-                ]);
+            onSuccess: async (data) => {
+                const updatedApis = await apisMutate();
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                apiKey ? await globalMutate(apiKey) : await Promise.resolve();
+
+                if (updatedApis && updatedApis.length > 0) {
+                    setId(updatedApis[updatedApis.length - 1].id);
+                }
             }
         }
     )
