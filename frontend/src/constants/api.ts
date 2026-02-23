@@ -39,7 +39,7 @@ export interface ApiRequestHistory {
     url: string | null
     header_sent: Record<string,  any>[] | null
     body_sent: Record<string, any>[] | null
-    staus_code: number | null
+    status_code: number | null
     duration_ms: number | null
     response_size: number | null
     response_body: Record<string, any>[] | null

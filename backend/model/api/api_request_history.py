@@ -1,6 +1,8 @@
+from decimal import Decimal
 from uuid import UUID, uuid4
 from typing import Dict, Any, List
 
+from sqlmodel import Numeric
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import SQLModel, Field, Relationship
@@ -19,7 +21,7 @@ class ApiRequestHistory(SQLModel, table = True):
     body_sent: Dict[str, Any] | None= Field(default = None, sa_column = Column(JSONB))
     status_code: int
     duration_ms: int
-    response_size: int
+    response_size: Decimal = Field(sa_column=Column(Numeric(precision=10, scale=2)))
     response_body: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
     response_headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
     error_message: Dict[str, Any] | None = Field(default = None, sa_column =  Column(JSONB))
@@ -37,7 +39,7 @@ class ApiRequestHistoryResponse(SQLModel):
     body_sent: Dict[str, Any] | None = Field(default = None)
     status_code: int
     duration_ms: int
-    response_size: int
+    response_size: Decimal = Field(sa_column=Column(Numeric(precision=10, scale=2)))
     response_body: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
     response_headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
     error_message: Dict[str, Any] | None = Field(default = None)

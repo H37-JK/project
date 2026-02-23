@@ -80,6 +80,13 @@ async def auth (
             "user_id": user.id,
             "api_collection_id": None,
             "is_deletable": False,
+            "params": [
+                {
+                    'key': '',
+                    'value': '',
+                    'active': True
+                }
+            ]
         }
     )
 

@@ -102,7 +102,7 @@ async def call_api_request (
         response.raise_for_status()
 
         status_code = response.status_code
-        response_size = len(response.content)
+        response_size = len(response.content) / 1000000
         response_headers = dict(response.headers)
         try:
             response_body = response.json()
@@ -160,7 +160,14 @@ async def create_api_request (
         api_request_create,
         update={
             "user_id": current_user.id,
-            "api_collection_id": None
+            "api_collection_id": None,
+            "params": [
+                {
+                    'key': '',
+                    'value': '',
+                    'active': True
+                }
+            ]
         }
     )
     session.add(api_request)
