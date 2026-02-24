@@ -256,6 +256,10 @@ export default function Home() {
                 'method': requestData.method,
                 'params': requestData.params,
                 'headers': requestData.headers,
+                'body_type': requestData.body_type,
+                'body_content': requestData.body_content,
+                'auth_type': requestData.auth_type,
+                'auth_content': requestData.auth_content,
             }
             const res: ApiRequestHistory = await callTrigger({
                 data
