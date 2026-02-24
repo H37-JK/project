@@ -157,6 +157,13 @@ export default function Home() {
         }
     }, [id]);
 
+    useEffect(() => {
+        if (apis && apis.length > 0 && !id) {
+            setId(apis[apis.length - 1].id);
+        }
+    }, [apis, id]);
+
+
 
 
     useEffect(() => {
@@ -246,7 +253,9 @@ export default function Home() {
             const data = {
                 id,
                 'url': requestData.url,
-                'method': requestData.method
+                'method': requestData.method,
+                'params': requestData.params,
+                'headers': requestData.headers,
             }
             const res: ApiRequestHistory = await callTrigger({
                 data
@@ -323,6 +332,7 @@ export default function Home() {
         const newParam = {
             'key': '',
             'value': '',
+            'desc': '',
             'active': true,
         }
         const newData = {
@@ -537,8 +547,8 @@ export default function Home() {
                         </div>
                     </div>
 
-                    {(requestData.params.length > 0 ? requestData.params : [null]).map((data, key) => (
-                        <QueryParameterComponent key={key} index={key} deleteParam={deleteParam} updateParam={updateParam} />
+                    {requestData && requestData.params.map((data, key) => (
+                        <QueryParameterComponent key={key} index={key} deleteParam={deleteParam} updateParam={updateParam} data={data} />
                     ))}
 
 

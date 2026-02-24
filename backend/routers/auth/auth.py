@@ -84,6 +84,7 @@ async def auth (
                 {
                     'key': '',
                     'value': '',
+                    'desc': '',
                     'active': True
                 }
             ]

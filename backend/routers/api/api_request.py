@@ -76,6 +76,7 @@ async def call_api_request (
     method = api_request_call.method
     headers = build_options(api_request_call.headers)
     params = build_options(api_request_call.params)
+    print(api_request_call.params)
 
 
     request_args = {}
@@ -97,8 +98,10 @@ async def call_api_request (
         client.headers = headers
         client.params = params
         client.timeout = 10.0
+        print(client.params, params)
         request = client.build_request(method.upper(), url, **request_args)
         response = await client.send(request, follow_redirects = True)
+        print(response)
         response.raise_for_status()
 
         status_code = response.status_code
@@ -165,6 +168,7 @@ async def create_api_request (
                 {
                     'key': '',
                     'value': '',
+                    'desc': '',
                     'active': True
                 }
             ]

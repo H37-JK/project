@@ -1,29 +1,29 @@
 import {CiTrash} from "react-icons/ci";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 
 interface QueryParameterProps {
+    data: Record<string, any>
     index: number
     deleteParam: (index: number) => void
     updateParam: (index: number, key: string, value: any) => void
 }
 
-const QueryParameterComponent = ({index, deleteParam, updateParam} : QueryParameterProps) => {
-    const [showCheck, setShowCheck] = useState<boolean>(true)
+const QueryParameterComponent = ({data, index, deleteParam, updateParam} : QueryParameterProps) => {
+
 
     return (
         <div className="flex flex-1">
             <div className="flex flex-1">
-                <input type="text" placeholder="키"
+                <input type="text" placeholder="키" value={data.key} onChange={(e) => updateParam(index,'key', e.target.value)}
                        className="outline-none basis-9/28 border-r py-2 px-3 border-b border-zinc-800"/>
-                <input type="text" placeholder="값"
+                <input type="text" placeholder="값" value={data.value} onChange={(e) => updateParam(index,'value', e.target.value)}
                        className="outline-none basis-9/28 border-r py-2 px-3 border-b border-zinc-800"/>
-                <input type="text" placeholder="설명"
+                <input type="text" placeholder="설명" value={data.desc} onChange={(e) => updateParam(index,'desc', e.target.value)}
                        className="outline-none basis-8/28 border-r py-2 px-3 border-b border-zinc-800"/>
                 <div
                     className="outline-none basis-1/28  border-r py-2 px-3 border-b border-zinc-800 flex items-center">
-                    {showCheck ? (
+                    {data.active ? (
                         <svg onClick={() => {
-                            setShowCheck(!showCheck);
                             updateParam(index, 'active', false)
                         }} viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons fill-green-500 text-green-600 cursor-pointer">
                             <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
@@ -34,7 +34,6 @@ const QueryParameterComponent = ({index, deleteParam, updateParam} : QueryParame
                         </svg>
                     ) : (
                         <svg onClick={() => {
-                            setShowCheck(!showCheck)
                             updateParam(index, 'active', true)
                         }} viewBox="0 0 24 24" width="1.2em" height="1.2em"
                              className="svg-icons fill-green-500 text-green-600 cursor-pointer">

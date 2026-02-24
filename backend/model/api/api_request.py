@@ -13,9 +13,9 @@ from backend.model.user.user import User
 class ApiRequest(SQLModel, table = True):
     __tablename__ = "api_request"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    name: str = Field(default = "Untitled", max_length = 50)
+    name: str = Field(default = "Untitled", max_length = 100)
     method: str = Field(default = "GET", index = True, max_length = 50)
-    url: str | None = Field(default = None, max_length = 50)
+    url: str | None = Field(default = None)
     headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column = Column(JSONB))
     params: List[Dict[str, Any]] = Field(default_factory = list, sa_column =  Column(JSONB))
     body_type: str | None = Field(default = None, max_length = 50)
@@ -45,7 +45,7 @@ class ApiRequestCreateResponse(SQLModel):
 class ApiRequestUpdate(SQLModel):
     name: str | None = Field(default = None)
     method: str | None = Field(default = None, max_length = 50)
-    url: str | None = Field(default = None, max_length = 50)
+    url: str | None = Field(default = None)
     headers: List[Dict[str, Any]]  = Field(default_factory = list)
     params: List[Dict[str, Any]] = Field(default_factory = list)
     body_type: str | None = Field(default = None, max_length = 50)
@@ -57,7 +57,7 @@ class ApiRequestUpdate(SQLModel):
 class ApiRequestUpdateResponse(SQLModel):
     name: str
     method: str = Field(max_length = 50)
-    url: str = Field(max_length = 50)
+    url: str = Field()
     headers: List[Dict[str, Any]]  = Field(default_factory = list)
     params: List[Dict[str, Any]] = Field(default_factory = list)
     body_type: str | None = Field(default = None, max_length = 50)
@@ -71,7 +71,7 @@ class ApiRequestCall(SQLModel):
     id: UUID
     name: str | None = Field(default = None)
     method: str = Field(max_length = 50)
-    url: str = Field(max_length = 50)
+    url: str = Field()
     headers: List[Dict[str, Any]]  = Field(default_factory = list)
     params: List[Dict[str, Any]] = Field(default_factory = list)
     body_type: str | None = Field(default = None, max_length = 50)
