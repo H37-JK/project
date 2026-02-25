@@ -2,6 +2,8 @@ import os
 import warnings
 import traceback
 
+from functools import wraps
+from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -43,12 +45,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan = lifespan, route_class = LoggingRoute)
-app.add_middleware (
-    SessionMiddleware, # type: ignore
-    secret_key = os.getenv("SECRET_KEY"),
-    same_site="lax",
-    https_only = False
-)
 
 app.add_middleware (
     CORSMiddleware, # type: ignore
@@ -56,6 +52,13 @@ app.add_middleware (
     allow_credentials = True,
     allow_methods = ["*"],
     allow_headers = ["*"]
+)
+
+app.add_middleware (
+    SessionMiddleware, # type: ignore
+    secret_key = os.getenv("SECRET_KEY"),
+    same_site="lax",
+    https_only = False
 )
 
 app.include_router(user.router)
@@ -173,16 +176,30 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         },
     )
 
+def create_error_response(request: Request, status_code, content):
+    response = JSONResponse(
+        status_code = status_code,
+        content = content
+    )
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
 @app.exception_handler(IntegrityError)
 async def integrity_exception_handler(request: Request, error: IntegrityError):
     logger.error(f"데이터베이스 제약 조건 위반 | {request.method} {request.url.path}")
     logger.error(f"  > 클라이언트 IP: {request.client.host}")
     logger.error(f"  > 오류 메시지: {traceback.format_exc()}")
-    return JSONResponse (
-        status_code = status.HTTP_400_BAD_REQUEST,
+    return create_error_response (
+        request,
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
         content = {
-            "error_type": "IntegrityError",
-            "detail": "데이터 제약 조건 위반 입니다. (중복된 데이터나 잘못된 참조 입니다.)",
+            "error_type": "서버 내부 오류",
+            "detail": "서버 내부 오류가 발생 했습니다. (Internal Server Error)",
             "trace": f"에러 상세: {traceback.format_exc()}",
         }
     )
@@ -192,22 +209,8 @@ async def sqlalchemy_exception_handler(request: Request, error: SQLAlchemyError)
     logger.error(f"기타 데이터베이스 오류 | {request.method} {request.url.path}")
     logger.error(f"  > 클라이언트 IP: {request.client.host}")
     logger.error(f"  > 오류 메시지: {traceback.format_exc()}")
-    return JSONResponse (
-        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content = {
-            "error_type": "기타 데이터베이스 오류",
-            "detail": "데이터베이스 작업 중 오류가 발생 하였습니다",
-            "trace": f"에러 상세: {traceback.format_exc()}",
-        }
-    )
-
-
-@app.exception_handler(Exception)
-async def generic_exception_handler(request: Request, error: Exception):
-    logger.error(f"예상치 못한 오류 발생 (500 Internal Server Error) | {request.method} {request.url.path}")
-    logger.error(f"  > 클라이언트 IP: {request.client.host}")
-    logger.error(f"  > 오류 메시지: {traceback.format_exc()}")
-    return JSONResponse(
+    return create_error_response (
+        request,
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
         content = {
             "error_type": "서버 내부 오류",
@@ -215,4 +218,20 @@ async def generic_exception_handler(request: Request, error: Exception):
             "trace": f"에러 상세: {traceback.format_exc()}",
         }
     )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, error: Exception):
+    logger.error(f"예상치 못한 오류 발생 (500 Internal Server Error) | {request.method} {request.url.path}")
+    logger.error(f"  > 클라이언트 IP: {request.client.host}")
+    logger.error(f"  > 오류 메시지: {traceback.format_exc()}")
+    return create_error_response (
+        request,
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content = {
+            "error_type": "서버 내부 오류",
+            "detail": "서버 내부 오류가 발생 했습니다. (Internal Server Error)",
+            "trace": f"에러 상세: {traceback.format_exc()}",
+        }
+    )
+
 

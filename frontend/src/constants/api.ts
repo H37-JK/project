@@ -9,9 +9,9 @@ export interface ApiRequest {
     url: string
     headers: Record<string, any>[]
     params: Record<string, any>[]
-    body_type?: string
-    body_content?: Record<string, any>
-    auth_type?: string
+    body_type: string
+    body_content: string
+    auth_type: string
     auth_content?: Record<string, any>
     tab_active: boolean
     is_deletable: boolean
@@ -26,7 +26,7 @@ export interface ApiRequestUpdate {
     headers: Record<string, any>[]
     params: Record<string, any>[]
     body_type?: string | null
-    body_content?: Record<string, any> | null
+    body_content?: string | null
     auth_type?: string | null
     auth_content?: Record<string, any> | null
     tab_active: boolean

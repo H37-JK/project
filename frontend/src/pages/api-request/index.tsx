@@ -9,6 +9,7 @@ import JsonEditor from "@/components/editor/JsonEditor";
 import {IoIosSave} from "react-icons/io";
 import {LuPencilLine} from "react-icons/lu";
 import {useSession} from "next-auth/react";
+import axios from 'axios'
 import {postFetcher, deleteFetcher, getFetcher, updateFetcher} from "@/lib/axios";
 import useSWR from "swr";
 import {ApiRequest, ApiRequestHistory, ApiRequestUpdate} from "@/constants/api";
@@ -20,6 +21,8 @@ import ApiRequestComponent from "@/components/api/api-request/ApiRequestComponen
 import {useSWRConfig} from 'swr';
 import HttpMethodDropdown from "@/components/dropdown/HttpMethodDropdown";
 import QueryParameterComponent from "@/components/api/api-request/QueryParameterComponent";
+import ContentTypeDropdown from "@/components/dropdown/ContentTypesDropDown";
+import CodeEditor from "@/components/editor/CodeEditor";
 
 export default function Home() {
     const {data: session, status} = useSession()
@@ -29,6 +32,11 @@ export default function Home() {
     const [id, setId] = useState<string | null>(null)
     const [isHttpMethodOpen, setIsHttpMethodOpen] = useState<boolean>(false)
     const [selectedHttpMethod, setSelectedHttpMethod] = useState<string | null>('GET')
+
+    const [activeTab, setActiveTab] = useState('파라미터')
+    const tabs = ['파라미터', '본문', '헤더', '인증', '사전요청 스크립트']
+
+    const [contentDropdownOpen, setContentDropdownOpen] = useState(false)
 
     const [requestData, setRequestData] = useState<ApiRequestUpdate>({
         id: null,
@@ -164,8 +172,6 @@ export default function Home() {
     }, [apis, id]);
 
 
-
-
     useEffect(() => {
         return () => {
             if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
@@ -264,9 +270,21 @@ export default function Home() {
             const res: ApiRequestHistory = await callTrigger({
                 data
             })
+            console.log(res)
             setHistoryData(res)
         } catch (error) {
-            console.error(error)
+            if (axios.isAxiosError(error)) {
+                const errorMessage = error.response?.data?.detail;
+
+                console.log("에러 상세 내용:", errorMessage);
+
+                // 만약 detail이 리스트 형태(유효성 검사 실패 등)라면 처리
+                if (Array.isArray(errorMessage)) {
+                    console.log("유효성 검사 에러:", errorMessage[0].msg);
+                }
+            } else {
+                console.error("일반 에러:", error);
+            }
         }
     }
 
@@ -289,7 +307,7 @@ export default function Home() {
                     {revalidate: false}
                 );
 
-                await updateTrigger({
+                const res = await updateTrigger({
                     id: targetId,
                     data: newData
                 });
@@ -298,7 +316,7 @@ export default function Home() {
                 await globalMutate(`/get/api-request/${targetId}`);
                 console.error(error);
             }
-        }, 100);
+        }, 200);
     };
 
     const updateField = async (key: keyof ApiRequestUpdate, value: any) => {
@@ -495,7 +513,7 @@ export default function Home() {
 
                 </div>
 
-                <div className="text-[12px] min-h-[420px] border-b border-zinc-800">
+                <div className="text-[12px] min-h-[420px]  border-b border-zinc-800 flex flex-1 flex-col">
                     {/*요청입력*/}
                     <div className="flex text-[12px] rounded p-2">
                         <div ref={dropdownRef} onClick={() => setIsHttpMethodOpen(!isHttpMethodOpen)}
@@ -524,38 +542,41 @@ export default function Home() {
                     </div>
 
                     <div className="flex space-x-6 text-[12px] p-2">
-                        <div className="font-bold cursor-pointer relative">
-                            <div className="tab active">파라미터</div>
-                        </div>
-                        <div className="hover:font-bold cursor-pointer relative">
-                            <div className="tab">본문</div>
-                        </div>
-                        <div className="hover:font-bold cursor-pointer relative">
-                            <div className="tab">헤더</div>
-                        </div>
-                        <div className="hover:font-bold cursor-pointer relative">
-                            <div className="tab">인증</div>
-                        </div>
-                        <div className="hover:font-bold cursor-pointer relative">
-                            <div className="tab">사전요청 스크립트</div>
-                        </div>
+                        {tabs.map((tab, key) => (
+                            <div onClick={() => setActiveTab(tab)} key={key}  className="font-bold cursor-pointer relative">
+                                <div className={`${activeTab == tab ? 'tab active' : 'tab'}`}>{tab}</div>
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold">
-                        <div>쿼리 파라미터 목록</div>
-                        <div className="flex flex-1 justify-end space-x-3 mr-1">
-                            <div className="cursor-pointer"><RiDeleteBin6Line
-                                className="h-3.5 w-3.5 text-gray-300 hover:text-gray-400"/></div>
-                            <div className="cursor-pointer"><FaPlus onClick={() => addParam()}
-                                className="h-3.5 w-3.5 text-gray-300 hover:text-gray-400"/></div>
-                        </div>
-                    </div>
+                    {activeTab === '파라미터' && (
+                        <>
+                            <div className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold">
+                                <div>쿼리 파라미터 목록</div>
+                                <div className="flex flex-1 justify-end space-x-3 mr-1">
+                                    <div className="cursor-pointer"><FaPlus onClick={() => addParam()}
+                                                                            className="h-3.5 w-3.5 text-gray-300 hover:text-gray-400"/></div>
+                                </div>
+                            </div>
+                            {requestData && requestData.params.map((data, key) => (
+                                <QueryParameterComponent key={key} index={key} deleteParam={deleteParam} updateParam={updateParam} data={data} />
+                            ))}
+                        </>
+                    )}
 
-                    {requestData && requestData.params.map((data, key) => (
-                        <QueryParameterComponent key={key} index={key} deleteParam={deleteParam} updateParam={updateParam} data={data} />
-                    ))}
-
-
+                    {activeTab === '본문' && (
+                        <>
+                            <div className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold space-x-3 items-center">
+                                <div>컨텐츠 종류</div>
+                                <div className="flex space-x-1 items-center mb-0.5 cursor-pointer relative hover:text-zinc-300">
+                                    <div onClick={() => setContentDropdownOpen(!contentDropdownOpen)}>{requestData.body_type}</div>
+                                    <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
+                                    <ContentTypeDropdown contentDropdownOpen={contentDropdownOpen} setContentDropdownOpen={setContentDropdownOpen} updateField={updateField} selected={requestData!.body_type!}/>
+                                </div>
+                            </div>
+                            <CodeEditor body_content={requestData!.body_content!} updateField={updateField} />
+                        </>
+                    )}
                 </div>
 
                 <div className="flex flex-col flex-1 overflow-hidden">

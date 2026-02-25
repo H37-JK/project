@@ -1,3 +1,4 @@
+import json
 from uuid import UUID
 
 import httpx
@@ -76,14 +77,13 @@ async def call_api_request (
     method = api_request_call.method
     headers = build_options(api_request_call.headers)
     params = build_options(api_request_call.params)
-    print(api_request_call.params)
-
 
     request_args = {}
-    if api_request_call.body_type == "application/json":
-        request_args["json"] = api_request_call.body_content
-    elif api_request_call.body_type == "x-www-form-urlencoded":
-        request_args["data"] = api_request_call.body_content
+    if api_request_call.method != "GET":
+       if api_request_call.body_type == "application/json":
+          request_args["json"] = json.loads(api_request_call.body_content)
+       elif api_request_call.body_type == "x-www-form-urlencoded":
+          request_args["data"] = api_request_call.body_content
 
     start_time = get_utc_now()
     response: httpx.Response | None = None
@@ -98,14 +98,12 @@ async def call_api_request (
         client.headers = headers
         client.params = params
         client.timeout = 10.0
-        print(client.params, params)
         request = client.build_request(method.upper(), url, **request_args)
         response = await client.send(request, follow_redirects = True)
-        print(response)
         response.raise_for_status()
 
         status_code = response.status_code
-        response_size = len(response.content) / 1000000
+        response_size = len(response.content)
         response_headers = dict(response.headers)
         try:
             response_body = response.json()
@@ -171,7 +169,16 @@ async def create_api_request (
                     'desc': '',
                     'active': True
                 }
-            ]
+            ],
+            "headers": [
+                {
+                    'key': '',
+                    'value': '',
+                    'desc': '',
+                    'active': True
+                }
+            ],
+            "body_type": 'application/json'
         }
     )
     session.add(api_request)

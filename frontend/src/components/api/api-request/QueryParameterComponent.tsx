@@ -12,7 +12,7 @@ const QueryParameterComponent = ({data, index, deleteParam, updateParam} : Query
 
 
     return (
-        <div className="flex flex-1">
+        <div>
             <div className="flex flex-1">
                 <input type="text" placeholder="키" value={data.key} onChange={(e) => updateParam(index,'key', e.target.value)}
                        className="outline-none basis-9/28 border-r py-2 px-3 border-b border-zinc-800"/>

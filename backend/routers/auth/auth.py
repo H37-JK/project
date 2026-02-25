@@ -12,6 +12,7 @@ from backend.logs.logging_route import LoggingRoute
 from backend.model import User, ApiRequest
 from backend.model.api.api_request import ApiRequestCreate
 from backend.passlib.jwt_token import create_access_token
+from backend.routers.api.api_request import get_api_requests
 from backend.schemas.token import Token
 GOOGLE_REDIRECT_URI = "http://localhost:8000/auth/callback/google"
 
@@ -43,7 +44,6 @@ async def auth (
     request: Request,
     response: Response,
 ):
-
     try:
         token = await oauth.google.authorize_access_token(request)
     except Exception as e:
@@ -70,11 +70,14 @@ async def auth (
     session.add(user)
     session.commit()
     session.refresh(user)
+    res = await get_api_requests(session, user)
+    print(res)
+    if not res:
+        print('tset')
+        api_request_create = ApiRequestCreate (
 
-    api_request_create = ApiRequestCreate (
-
-    )
-    api_request = ApiRequest.model_validate (
+        )
+        api_request = ApiRequest.model_validate (
         api_request_create,
         update = {
             "user_id": user.id,
@@ -87,13 +90,22 @@ async def auth (
                     'desc': '',
                     'active': True
                 }
-            ]
+            ],
+            "headers": [
+                {
+                    'key': '',
+                    'value': '',
+                    'desc': '',
+                    'active': True
+                }
+            ],
+            "body_type": 'application/json'
         }
-    )
+        )
+        session.add(api_request)
+        session.commit()
+        session.refresh(api_request)
 
-    session.add(api_request)
-    session.commit()
-    session.refresh(api_request)
 
 
 
