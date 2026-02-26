@@ -1,9 +1,8 @@
 import {IoLogoChrome} from "react-icons/io5";
 import {TbLayoutSidebarLeftCollapse} from "react-icons/tb";
 import {GoPlus} from "react-icons/go";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState, useCallback} from "react";
 import {IoIosArrowDown} from "react-icons/io";
-import {RiDeleteBin6Line} from "react-icons/ri";
 import {FaPlus} from "react-icons/fa6";
 import JsonEditor from "@/components/editor/JsonEditor";
 import {IoIosSave} from "react-icons/io";
@@ -21,8 +20,13 @@ import ApiRequestComponent from "@/components/api/api-request/ApiRequestComponen
 import {useSWRConfig} from 'swr';
 import HttpMethodDropdown from "@/components/dropdown/HttpMethodDropdown";
 import QueryParameterComponent from "@/components/api/api-request/QueryParameterComponent";
-import ContentTypeDropdown from "@/components/dropdown/ContentTypesDropDown";
+import ContentTypeDropdown from "@/components/dropdown/ContentTypesDropdown";
 import CodeEditor from "@/components/editor/CodeEditor";
+import {formatBytesToHumanReadable} from "@/lib/file";
+import SpinnerComponent from "@/components/spinner/SpinnerComponent";
+import SearchDropdown from "@/components/dropdown/AuthTypeDropdown";
+import AuthTypeDropdown from "@/components/dropdown/AuthTypeDropdown";
+import {getAssetAsBlob} from "node:sea";
 
 export default function Home() {
     const {data: session, status} = useSession()
@@ -37,6 +41,8 @@ export default function Home() {
     const tabs = ['파라미터', '본문', '헤더', '인증', '사전요청 스크립트']
 
     const [contentDropdownOpen, setContentDropdownOpen] = useState(false)
+    const [authDropdownOpen, setAuthDropdownOpen] = useState(false)
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const [requestData, setRequestData] = useState<ApiRequestUpdate>({
         id: null,
@@ -52,6 +58,12 @@ export default function Home() {
         tab_active: false,
         update_at: null,
     })
+
+    const latestRequestDataRef = useRef<ApiRequestUpdate>(requestData)
+
+    useEffect(() => {
+        latestRequestDataRef.current = requestData
+    }, [requestData]);
 
     const [historyData, setHistoryData] = useState<ApiRequestHistory>({
         id: null,
@@ -80,6 +92,22 @@ export default function Home() {
         CUSTOM: "text-zinc-400",
     };
 
+    const handleCtrlEnter = useCallback(async (event: { ctrlKey: any; metaKey: any; key: string; preventDefault: () => void; }) => {
+        const currentId = latestIdRef.current;
+        if (currentId && (event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+            await callApiRequest()
+        }
+    }, []);
+
+
+    useEffect(() => {
+        document.addEventListener('keydown', handleCtrlEnter)
+        return () => {
+            document.removeEventListener('keydown', handleCtrlEnter)
+        }
+    }, [handleCtrlEnter]);
+
     const methodColor = requestData.method
         ? methodColorMap[requestData.method] ?? "text-zinc-400"
         : "text-zinc-400";
@@ -103,13 +131,13 @@ export default function Home() {
         setIsMenuToggle(!isMenuToggle)
     }
 
-    const dropdownRef = useRef<HTMLDivElement | null>(null)
+    const httpMethodDropdownRef = useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
         if (!isHttpMethodOpen) return
 
         const onPointerDown = (e: PointerEvent) => {
-            const element = dropdownRef.current
+            const element = httpMethodDropdownRef.current
             if (!element) return
 
             if (!element.contains(e.target as Node)) {
@@ -123,6 +151,48 @@ export default function Home() {
             document.removeEventListener("pointerdown", onPointerDown, true)
         }
     }, [isHttpMethodOpen, setIsHttpMethodOpen]);
+
+    const contentDropdownRef = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        if (!contentDropdownOpen) return
+
+        const onPointerDown = (e: PointerEvent) => {
+            const element = contentDropdownRef.current
+            if (!element) return
+
+            if (!element.contains(e.target as Node)) {
+                setContentDropdownOpen(false)
+            }
+        }
+
+        document.addEventListener("pointerdown", onPointerDown, true)
+
+        return () => {
+            document.removeEventListener("pointerdown", onPointerDown, true)
+        }
+    }, [contentDropdownOpen, setContentDropdownOpen]);
+
+    const authDropdownRef = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        if (!authDropdownOpen) return
+
+        const onPointerDown = (e: PointerEvent) => {
+            const element = authDropdownRef.current
+            if (!element) return
+
+            if (!element.contains(e.target as Node)) {
+                setAuthDropdownOpen(false)
+            }
+        }
+
+        document.addEventListener("pointerdown", onPointerDown, true)
+
+        return () => {
+            document.removeEventListener("pointerdown", onPointerDown, true)
+        }
+    }, [authDropdownOpen, setAuthDropdownOpen]);
 
     const {
         data: apis,
@@ -158,7 +228,6 @@ export default function Home() {
 
     useEffect(() => {
         latestIdRef.current = id;
-
         if (saveTimerRef.current) {
             window.clearTimeout(saveTimerRef.current);
             saveTimerRef.current = null;
@@ -254,31 +323,33 @@ export default function Home() {
         }
     }
 
-    const callApiRequest = async (id: string) => {
+    const callApiRequest = async () => {
+        const currentId = latestIdRef.current
+        const currentData = latestRequestDataRef.current
+        if (!currentId) return
         try {
             const data = {
-                id,
-                'url': requestData.url,
-                'method': requestData.method,
-                'params': requestData.params,
-                'headers': requestData.headers,
-                'body_type': requestData.body_type,
-                'body_content': requestData.body_content,
-                'auth_type': requestData.auth_type,
-                'auth_content': requestData.auth_content,
+                id: currentId,
+                'url': currentData.url,
+                'method': currentData.method,
+                'params': currentData.params,
+                'headers': currentData.headers,
+                'body_type': currentData.body_type,
+                'body_content': currentData.body_content,
+                'auth_type': currentData.auth_type,
+                'auth_content': currentData.auth_content,
             }
             const res: ApiRequestHistory = await callTrigger({
                 data
             })
-            console.log(res)
+            res.response_size = formatBytesToHumanReadable(res.response_size)
+            setErrorMessage(null)
             setHistoryData(res)
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 const errorMessage = error.response?.data?.detail;
-
                 console.log("에러 상세 내용:", errorMessage);
-
-                // 만약 detail이 리스트 형태(유효성 검사 실패 등)라면 처리
+                setErrorMessage(errorMessage)
                 if (Array.isArray(errorMessage)) {
                     console.log("유효성 검사 에러:", errorMessage[0].msg);
                 }
@@ -365,6 +436,21 @@ export default function Home() {
         if (id) persistUpdate(id, newData)
     }
 
+    const addHeader = async () => {
+        const newHeader = {
+            'key': '',
+            'value': '',
+            'desc': '',
+            'active': true,
+        }
+        const newData = {
+            ...requestData,
+            headers: [...requestData.headers, newHeader]
+        }
+        setRequestData(newData)
+        if (id) persistUpdate(id, newData)
+    }
+
     const updateParam = (index: number, key: string, value: any) => {
         const newData = {
             ...requestData,
@@ -376,10 +462,30 @@ export default function Home() {
         if (id) persistUpdate(id, newData)
     }
 
+    const updateHeader = (index: number, key: string, value: any) => {
+        const newData = {
+            ...requestData,
+            headers: requestData.headers.map((header, i) =>
+                i === index ? {...header, [key]: value} : header
+            )
+        };
+        setRequestData(newData)
+        if (id) persistUpdate(id, newData)
+    }
+
     const deleteParam = async (index: number) => {
         const newData = {
             ...requestData,
             params: requestData.params.filter((_, i) => i !== index)
+        }
+        setRequestData(newData)
+        if (id) persistUpdate(id, newData)
+    }
+
+    const deleteHeader = async (index: number) => {
+        const newData = {
+            ...requestData,
+            headers: requestData.headers.filter((_, i) => i !== index)
         }
         setRequestData(newData)
         if (id) persistUpdate(id, newData)
@@ -516,7 +622,7 @@ export default function Home() {
                 <div className="text-[12px] min-h-[420px]  border-b border-zinc-800 flex flex-1 flex-col">
                     {/*요청입력*/}
                     <div className="flex text-[12px] rounded p-2">
-                        <div ref={dropdownRef} onClick={() => setIsHttpMethodOpen(!isHttpMethodOpen)}
+                        <div ref={httpMethodDropdownRef} onClick={() => setIsHttpMethodOpen(!isHttpMethodOpen)}
                              className="flex rounded-l relative items-center border border-r-0  text-green-400 cursor-pointer !bg-[#1c1c1e] border-zinc-800 py-1.5 px-5 pl-3 outline-none space-x-5">
                             <div className={`font-bold ${methodColor}`}>{requestData.method}</div>
                             {isHttpMethodOpen &&
@@ -530,8 +636,8 @@ export default function Home() {
                                className="pl-1 rounded-r outline-none border-l-0 flex flex-1 border border-zinc-800 !bg-[#1c1c1e] pr-12"
                                type="text"/>
 
-                        <button type="button" onClick={() => callApiRequest(id!)}
-                                className="rounded bg-blue-700 cursor-pointer hover:bg-blue-600 px-4 py-1 ml-2">전송
+                        <button type="button" onClick={() => callApiRequest()}
+                                className="rounded bg-indigo-500 cursor-pointer hover:bg-indigo-400 px-4 py-1 ml-2">전송
                         </button>
 
                         <button type="button" onClick={handleIsShowAlert} disabled={isShowAlert}
@@ -559,7 +665,7 @@ export default function Home() {
                                 </div>
                             </div>
                             {requestData && requestData.params.map((data, key) => (
-                                <QueryParameterComponent key={key} index={key} deleteParam={deleteParam} updateParam={updateParam} data={data} />
+                                <QueryParameterComponent key={key} index={key} deleteFiled={deleteParam} updateFiled={updateParam} data={data} />
                             ))}
                         </>
                     )}
@@ -568,13 +674,41 @@ export default function Home() {
                         <>
                             <div className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold space-x-3 items-center">
                                 <div>컨텐츠 종류</div>
-                                <div className="flex space-x-1 items-center mb-0.5 cursor-pointer relative hover:text-zinc-300">
-                                    <div onClick={() => setContentDropdownOpen(!contentDropdownOpen)}>{requestData.body_type}</div>
+                                <div ref={contentDropdownRef}  onClick={() => setContentDropdownOpen(!contentDropdownOpen)} className="flex space-x-1 items-center mb-0.5 cursor-pointer relative hover:text-zinc-300">
+                                    <div>{requestData.body_type}</div>
                                     <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
                                     <ContentTypeDropdown contentDropdownOpen={contentDropdownOpen} setContentDropdownOpen={setContentDropdownOpen} updateField={updateField} selected={requestData!.body_type!}/>
                                 </div>
                             </div>
                             <CodeEditor body_content={requestData!.body_content!} updateField={updateField} />
+                        </>
+                    )}
+
+                    {activeTab === '헤더' && (
+                        <>
+                            <div className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold">
+                                <div>헤더 목록</div>
+                                <div className="flex flex-1 justify-end space-x-3 mr-1">
+                                    <div className="cursor-pointer"><FaPlus onClick={() => addHeader()}
+                                                                            className="h-3.5 w-3.5 text-gray-300 hover:text-gray-400"/></div>
+                                </div>
+                            </div>
+                            {requestData && requestData.headers.map((data, key) => (
+                                <QueryParameterComponent key={key} index={key} deleteFiled={deleteHeader} updateFiled={updateHeader} data={data} />
+                            ))}
+                        </>
+                    )}
+
+                    {activeTab === '인증' && (
+                        <>
+                            <div ref={authDropdownRef} className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold space-x-3 items-center">
+                                <div>인증유형</div>
+                                <div onClick={() => setAuthDropdownOpen(!authDropdownOpen)} className="flex space-x-1 items-center mb-0.5 cursor-pointer relative hover:text-zinc-300">
+                                    <div>{requestData.auth_type}</div>
+                                    <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
+                                    <AuthTypeDropdown authDropdownOpen={authDropdownOpen} setAuthDropdownOpen={setAuthDropdownOpen} updateField={updateField} selected={requestData!.auth_type!}/>
+                                </div>
+                            </div>
                         </>
                     )}
                 </div>
@@ -587,7 +721,7 @@ export default function Home() {
                             <div className="text-zinc-400">시간: <span
                                 className="text-green-400">{historyData.duration_ms} ms</span></div>
                             <div className="text-zinc-400">크기: <span
-                                className="text-green-400">{historyData.response_size} MB</span></div>
+                                className="text-green-400">{historyData.response_size}</span></div>
                         </div>
 
                         <div className="flex space-x-7 text-[12px] mt-4 flex-1">
@@ -607,8 +741,7 @@ export default function Home() {
                     </div>
 
                     <div className="overflow-auto flex flex-1">
-                        {historyData?.response_body
-                            ? (<JsonEditor value={pretty}/>) : ""}
+                        {callMutating ? (<SpinnerComponent/>) : errorMessage ? (<div className="px-1.5 py-1.5 text-sm text-zinc-300">{errorMessage}</div>) : historyData?.response_body && (<JsonEditor value={pretty}/>)}
                     </div>
                 </div>
 

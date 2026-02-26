@@ -10,7 +10,7 @@ const SideMenuList = () => {
     return (
         <div
             className="px-0 absolute hidden md:flex space-y-1 top-0 bottom-0 w-10 hover:w-60 transition-all duration-150 ease-linear z-[99] border group border-t-0 border-zinc-800 !bg-[#171717] flex-col">
-            <Link href="/web-agent" prefetch={false}>
+            <Link href="/" prefetch={false}>
                 <div
                     className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">
                     <div>

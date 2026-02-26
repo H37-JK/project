@@ -41,7 +41,7 @@ export interface ApiRequestHistory {
     body_sent: Record<string, any>[] | null
     status_code: number | null
     duration_ms: number | null
-    response_size: number | null
+    response_size: string | null
     response_body: Record<string, any>[] | null
     response_headers: Record<string, any>[] | null
     error_message: Record<string, any> | null

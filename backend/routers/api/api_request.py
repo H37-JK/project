@@ -7,7 +7,7 @@ from sqlmodel import select, desc
 from typing import Annotated, Union, Dict, Any, List
 
 from backend.helper.date import get_utc_now
-from backend.helper.server_info import extract_domain_https
+from backend.helper.server_info import extract_domain_http
 from backend.model.api.api_request_history import ApiRequestHistory, ApiRequestHistoryResponse
 from backend.model.user.user import User
 from backend.passlib.jwt_token import get_current_user
@@ -69,11 +69,12 @@ async def call_api_request (
     current_user: Annotated[User, Depends(get_current_user)],
     api_request_call: ApiRequestCall,
 ):
+    print(f"test:${current_user}")
     api_request: ApiRequest = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == api_request_call.id)).one_or_none()
     if not api_request:
       raise HTTPException(status_code = 404, detail = "해당 API가 존재하지 않습니다.")
 
-    url = extract_domain_https(api_request_call.url)
+    url = extract_domain_http(api_request_call.url)
     method = api_request_call.method
     headers = build_options(api_request_call.headers)
     params = build_options(api_request_call.params)
@@ -146,6 +147,7 @@ async def call_api_request (
     session.commit()
     session.refresh(api_request)
     session.refresh(api_request_history)
+
 
     return api_request_history
 

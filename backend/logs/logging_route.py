@@ -15,12 +15,14 @@ class LoggingRoute(APIRoute):
         async def custom_route_handler(request: Request) -> Response:
             request_id = str(uuid.uuid4())
             with logger.contextualize(request_id = request_id):
+                response = await original_route_handler(request)
+                if request.method == "GET":
+                    return response
                 start_time = time.time()
                 logger.info(f"요청 시작 | {request.method} {request.url.path}")
                 logger.info(f"  > 클라이언트 IP: {request.client.host}")
                 logger.info(f"  > 파라미터: {request.query_params}")
 
-                response = await original_route_handler(request)
 
                 process_time = (time.time() - start_time) * 1000
                 formatted_process_time = f'{process_time:.2f}ms'

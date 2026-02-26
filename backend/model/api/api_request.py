@@ -34,6 +34,7 @@ class ApiRequest(SQLModel, table = True):
 
 class ApiRequestCreate(SQLModel):
     name: str = Field(default = "Untitled", max_length = 50)
+    auth_type: str = Field(default = "None")
 
 
 class ApiRequestCreateResponse(SQLModel):

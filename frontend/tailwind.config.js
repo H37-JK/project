@@ -5,7 +5,17 @@ module.exports = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        'spinner-fade': 'spinner-fade 1.2s linear infinite',
+      },
+      keyframes: {
+        'spinner-fade': {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+      },
+    },
   },
   plugins: [
     require('tailwind-scrollbar'),
