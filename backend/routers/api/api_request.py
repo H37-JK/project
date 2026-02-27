@@ -69,7 +69,6 @@ async def call_api_request (
     current_user: Annotated[User, Depends(get_current_user)],
     api_request_call: ApiRequestCall,
 ):
-    print(f"test:${current_user}")
     api_request: ApiRequest = session.exec(select(ApiRequest).where(ApiRequest.user_id == current_user.id, ApiRequest.id == api_request_call.id)).one_or_none()
     if not api_request:
       raise HTTPException(status_code = 404, detail = "해당 API가 존재하지 않습니다.")
@@ -147,7 +146,6 @@ async def call_api_request (
     session.commit()
     session.refresh(api_request)
     session.refresh(api_request_history)
-
 
     return api_request_history
 

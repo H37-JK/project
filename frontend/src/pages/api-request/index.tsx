@@ -1,96 +1,50 @@
 import {IoLogoChrome} from "react-icons/io5";
 import {TbLayoutSidebarLeftCollapse} from "react-icons/tb";
 import {GoPlus} from "react-icons/go";
-import React, {useEffect, useRef, useState, useCallback} from "react";
+import React, {useEffect, useRef, useCallback} from "react";
 import {IoIosArrowDown} from "react-icons/io";
 import {FaPlus} from "react-icons/fa6";
 import JsonEditor from "@/components/editor/JsonEditor";
 import {IoIosSave} from "react-icons/io";
 import {LuPencilLine} from "react-icons/lu";
-import {useSession} from "next-auth/react";
-import axios from 'axios'
-import {postFetcher, deleteFetcher, getFetcher, updateFetcher} from "@/lib/axios";
-import useSWR from "swr";
-import {ApiRequest, ApiRequestHistory, ApiRequestUpdate} from "@/constants/api";
-import useSWRMutation from "swr/mutation";
+import {ApiRequestUpdate} from "@/constants/api";
 import SkeletonComponent from "@/components/skeleton/SkeletonComponent";
 import ToolTipComponent from "@/components/tooltip/TooltipComponent";
-import {CiTrash} from "react-icons/ci";
 import ApiRequestComponent from "@/components/api/api-request/ApiRequestComponent";
-import {useSWRConfig} from 'swr';
 import HttpMethodDropdown from "@/components/dropdown/HttpMethodDropdown";
 import QueryParameterComponent from "@/components/api/api-request/QueryParameterComponent";
 import ContentTypeDropdown from "@/components/dropdown/ContentTypesDropdown";
 import CodeEditor from "@/components/editor/CodeEditor";
-import {formatBytesToHumanReadable} from "@/lib/file";
 import SpinnerComponent from "@/components/spinner/SpinnerComponent";
-import SearchDropdown from "@/components/dropdown/AuthTypeDropdown";
 import AuthTypeDropdown from "@/components/dropdown/AuthTypeDropdown";
-import {getAssetAsBlob} from "node:sea";
+import {useApiDataHooks} from "@/hooks/api/data/useApiDataHooks";
+import {useApiUIHooks, useClickOutside} from "@/hooks/api/ui/useApiUiHooks";
 
 export default function Home() {
-    const {data: session, status} = useSession()
-    const {mutate: globalMutate} = useSWRConfig();
-    const saveTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-    const latestIdRef = useRef<string | null>(null);
-    const [id, setId] = useState<string | null>(null)
-    const [isHttpMethodOpen, setIsHttpMethodOpen] = useState<boolean>(false)
-    const [selectedHttpMethod, setSelectedHttpMethod] = useState<string | null>('GET')
+    const {id, setId, requestData, setRequestData, historyData, apis, api, apisIsLoading, errorMessage, createApiRequest, deleteApiRequest, callApiRequest, callMutating, updateField, addDict, updateDict, deleteDict, saveTimerRef, latestIdRef, pretty} = useApiDataHooks()
+    const {activeTab, setActiveTab, tabs, isShowAlert, setIsShowAlert, showTrash, setShowTrash, dropdowns, setDropdowns, toggleDropdown, isMenuToggle, setIsMenuToggle, httpMethodRef, contentRef, authRef, handleIsShowAlert, handleIsMenuToggle, methodColor} = useApiUIHooks()
 
-    const [activeTab, setActiveTab] = useState('파라미터')
-    const tabs = ['파라미터', '본문', '헤더', '인증', '사전요청 스크립트']
+    const closeHttpMethod = useCallback(() => {
+        setDropdowns(p => ({ ...p, httpMethod: false }));
+    }, []);
 
-    const [contentDropdownOpen, setContentDropdownOpen] = useState(false)
-    const [authDropdownOpen, setAuthDropdownOpen] = useState(false)
-    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const closeContent = useCallback(() => {
+        setDropdowns(p => ({ ...p, content: false }));
+    }, []);
 
-    const [requestData, setRequestData] = useState<ApiRequestUpdate>({
-        id: null,
-        name: null,
-        method: null,
-        url: null,
-        headers: [],
-        params: [],
-        body_type: null,
-        body_content: null,
-        auth_type: null,
-        auth_content: null,
-        tab_active: false,
-        update_at: null,
-    })
 
-    const latestRequestDataRef = useRef<ApiRequestUpdate>(requestData)
+    const closeAuth = useCallback(() => {
+        setDropdowns(p => ({ ...p, auth: false }));
+    }, []);
 
-    useEffect(() => {
-        latestRequestDataRef.current = requestData
-    }, [requestData]);
+    useClickOutside(httpMethodRef, closeHttpMethod);
+    useClickOutside(contentRef, closeContent);
+    useClickOutside(authRef, closeAuth);
 
-    const [historyData, setHistoryData] = useState<ApiRequestHistory>({
-        id: null,
-        method: null,
-        url: null,
-        header_sent: null,
-        body_sent: null,
-        status_code: null,
-        duration_ms: null,
-        response_size: null,
-        response_body: null,
-        response_headers: null,
-        error_message: null
-    })
 
-    const methodColorMap: Record<string, string> = {
-        GET: "text-emerald-400",
-        POST: "text-amber-500",
-        PUT: "text-sky-400",
-        PATCH: "text-purple-400",
-        DELETE: "text-red-500",
-        HEAD: "text-teal-400",
-        OPTIONS: "text-indigo-400",
-        CONNECT: "text-zinc-400",
-        TRACE: "text-zinc-400",
-        CUSTOM: "text-zinc-400",
-    };
+    // useEffect(() => {
+    //     latestRequestDataRef.current = requestData
+    // }, [requestData]);
 
     const handleCtrlEnter = useCallback(async (event: { ctrlKey: any; metaKey: any; key: string; preventDefault: () => void; }) => {
         const currentId = latestIdRef.current;
@@ -100,112 +54,12 @@ export default function Home() {
         }
     }, []);
 
-
     useEffect(() => {
         document.addEventListener('keydown', handleCtrlEnter)
         return () => {
             document.removeEventListener('keydown', handleCtrlEnter)
         }
     }, [handleCtrlEnter]);
-
-    const methodColor = requestData.method
-        ? methodColorMap[requestData.method] ?? "text-zinc-400"
-        : "text-zinc-400";
-
-    const [isShowAlert, setIsShowAlert] = useState(false)
-    const [isMenuToggle, setIsMenuToggle] = useState(true)
-    const [showTrash, setShowTrash] = useState(false)
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedId, setSelectedId] = useState<string | null>(null);
-
-    const handleIsShowAlert = () => {
-        setIsShowAlert(true)
-
-        setTimeout(() => {
-            setIsShowAlert(false)
-        }, 1500)
-
-    }
-
-    const handleIsMenuToggle = () => {
-        setIsMenuToggle(!isMenuToggle)
-    }
-
-    const httpMethodDropdownRef = useRef<HTMLDivElement | null>(null)
-
-    useEffect(() => {
-        if (!isHttpMethodOpen) return
-
-        const onPointerDown = (e: PointerEvent) => {
-            const element = httpMethodDropdownRef.current
-            if (!element) return
-
-            if (!element.contains(e.target as Node)) {
-                setIsHttpMethodOpen(false)
-            }
-        }
-
-        document.addEventListener("pointerdown", onPointerDown, true)
-
-        return () => {
-            document.removeEventListener("pointerdown", onPointerDown, true)
-        }
-    }, [isHttpMethodOpen, setIsHttpMethodOpen]);
-
-    const contentDropdownRef = useRef<HTMLDivElement | null>(null)
-
-    useEffect(() => {
-        if (!contentDropdownOpen) return
-
-        const onPointerDown = (e: PointerEvent) => {
-            const element = contentDropdownRef.current
-            if (!element) return
-
-            if (!element.contains(e.target as Node)) {
-                setContentDropdownOpen(false)
-            }
-        }
-
-        document.addEventListener("pointerdown", onPointerDown, true)
-
-        return () => {
-            document.removeEventListener("pointerdown", onPointerDown, true)
-        }
-    }, [contentDropdownOpen, setContentDropdownOpen]);
-
-    const authDropdownRef = useRef<HTMLDivElement | null>(null)
-
-    useEffect(() => {
-        if (!authDropdownOpen) return
-
-        const onPointerDown = (e: PointerEvent) => {
-            const element = authDropdownRef.current
-            if (!element) return
-
-            if (!element.contains(e.target as Node)) {
-                setAuthDropdownOpen(false)
-            }
-        }
-
-        document.addEventListener("pointerdown", onPointerDown, true)
-
-        return () => {
-            document.removeEventListener("pointerdown", onPointerDown, true)
-        }
-    }, [authDropdownOpen, setAuthDropdownOpen]);
-
-    const {
-        data: apis,
-        isLoading: apisIsLoading,
-        mutate: apisMutate
-    } = useSWR<ApiRequest[]>('/get/tab-active-api-requests', getFetcher)
-    const apiKey = id ? `/get/api-request/${id}` : null;
-    const {
-        data: api,
-        isLoading: apiIsLoading,
-        mutate: apiMutate
-    } = useSWR<ApiRequest>(id ? `/get/api-request/${id}` : null, getFetcher)
-
 
     useEffect(() => {
         if (api) {
@@ -224,7 +78,7 @@ export default function Home() {
                 update_at: api.update_at,
             })
         }
-    }, [api, id]);
+    }, [api, id, setRequestData]);
 
     useEffect(() => {
         latestIdRef.current = id;
@@ -232,264 +86,14 @@ export default function Home() {
             window.clearTimeout(saveTimerRef.current);
             saveTimerRef.current = null;
         }
-    }, [id]);
+    }, [id, latestIdRef, saveTimerRef]);
 
     useEffect(() => {
         if (apis && apis.length > 0 && !id) {
             setId(apis[apis.length - 1].id);
         }
-    }, [apis, id]);
+    }, [apis, id, setId]);
 
-
-    useEffect(() => {
-        return () => {
-            if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-        };
-    }, []);
-
-    const {trigger: createTrigger, isMutating: createMutating} = useSWRMutation(
-        '/create/api-request',
-        postFetcher, {
-            onSuccess: async (data) => {
-                await Promise.all([
-                    apisMutate(),
-                    apiMutate()
-                ]);
-                if (data?.id) setId(data.id);
-            }
-        }
-    )
-
-    const {trigger: updateTrigger, isMutating: updateMutating} = useSWRMutation(
-        '/update/api-request',
-        updateFetcher, {
-            onSuccess: async () => {
-                await Promise.all([
-                    apisMutate(),
-                    apiKey ? globalMutate(apiKey) : Promise.resolve()
-                ]);
-            }
-        }
-    )
-
-    const {trigger: deleteTrigger, isMutating: deleteMutating} = useSWRMutation(
-        '/delete/api-request',
-        deleteFetcher, {
-            onSuccess: async (data) => {
-                const updatedApis = await apisMutate();
-                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                apiKey ? await globalMutate(apiKey) : await Promise.resolve();
-
-                if (updatedApis && updatedApis.length > 0) {
-                    setId(updatedApis[updatedApis.length - 1].id);
-                }
-            }
-        }
-    )
-
-    const {trigger: callTrigger, isMutating: callMutating} = useSWRMutation(
-        '/call/api-request',
-        postFetcher, {
-            onSuccess: async () => {
-                await Promise.all([
-                    apisMutate(),
-                    apiKey ? globalMutate(apiKey) : Promise.resolve()
-                ]);
-            }
-        }
-    )
-
-    const handleDeleteClick = (id: string) => {
-        setSelectedId(id);
-        setIsModalOpen(true);
-    };
-
-    const createApiRequest = async () => {
-        try {
-            const data = {}
-            await createTrigger({
-                data
-            })
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    const deleteApiRequest = async (id: string) => {
-        try {
-            await deleteTrigger(id)
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-    const callApiRequest = async () => {
-        const currentId = latestIdRef.current
-        const currentData = latestRequestDataRef.current
-        if (!currentId) return
-        try {
-            const data = {
-                id: currentId,
-                'url': currentData.url,
-                'method': currentData.method,
-                'params': currentData.params,
-                'headers': currentData.headers,
-                'body_type': currentData.body_type,
-                'body_content': currentData.body_content,
-                'auth_type': currentData.auth_type,
-                'auth_content': currentData.auth_content,
-            }
-            const res: ApiRequestHistory = await callTrigger({
-                data
-            })
-            res.response_size = formatBytesToHumanReadable(res.response_size)
-            setErrorMessage(null)
-            setHistoryData(res)
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                const errorMessage = error.response?.data?.detail;
-                console.log("에러 상세 내용:", errorMessage);
-                setErrorMessage(errorMessage)
-                if (Array.isArray(errorMessage)) {
-                    console.log("유효성 검사 에러:", errorMessage[0].msg);
-                }
-            } else {
-                console.error("일반 에러:", error);
-            }
-        }
-    }
-
-    const persistUpdate = (targetId: string, newData: ApiRequestUpdate) => {
-        if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-
-        // @ts-ignore
-        saveTimerRef.current = window.setTimeout(async () => {
-            if (latestIdRef.current !== targetId) return;
-
-            try {
-                const targetKey = `/get/api-request/${targetId}`;
-
-                await globalMutate(
-                    targetKey,
-                    (prev: ApiRequest | undefined) => {
-                        if (!prev) return prev as any;
-                        return {...prev, ...(newData as any)};
-                    },
-                    {revalidate: false}
-                );
-
-                const res = await updateTrigger({
-                    id: targetId,
-                    data: newData
-                });
-
-            } catch (error) {
-                await globalMutate(`/get/api-request/${targetId}`);
-                console.error(error);
-            }
-        }, 200);
-    };
-
-    const updateField = async (key: keyof ApiRequestUpdate, value: any) => {
-        const newData = {
-            ...requestData,
-            [key]: value
-        }
-        setRequestData(newData)
-        if (id) persistUpdate(id, newData);
-    }
-
-    const updateMethod = async (key: keyof ApiRequestUpdate, value: any) => {
-        const newData = {
-            ...requestData,
-            [key]: value
-        }
-        setRequestData(newData)
-        if (id) persistUpdate(id, newData)
-    }
-
-    const pretty = (() => {
-        const body = historyData?.response_body;
-        if (!body) return "";
-
-        if (typeof body === "object") return JSON.stringify(body, null, 2);
-
-
-        try {
-            return JSON.stringify(JSON.parse(body), null, 2);
-        } catch {
-        }
-    })();
-
-    const addParam = async () => {
-        const newParam = {
-            'key': '',
-            'value': '',
-            'desc': '',
-            'active': true,
-        }
-        const newData = {
-            ...requestData,
-            params: [...requestData.params, newParam]
-        }
-        setRequestData(newData)
-        if (id) persistUpdate(id, newData)
-    }
-
-    const addHeader = async () => {
-        const newHeader = {
-            'key': '',
-            'value': '',
-            'desc': '',
-            'active': true,
-        }
-        const newData = {
-            ...requestData,
-            headers: [...requestData.headers, newHeader]
-        }
-        setRequestData(newData)
-        if (id) persistUpdate(id, newData)
-    }
-
-    const updateParam = (index: number, key: string, value: any) => {
-        const newData = {
-            ...requestData,
-            params: requestData.params.map((param, i) =>
-                i === index ? { ...param, [key]: value } : param
-            )
-        };
-        setRequestData(newData)
-        if (id) persistUpdate(id, newData)
-    }
-
-    const updateHeader = (index: number, key: string, value: any) => {
-        const newData = {
-            ...requestData,
-            headers: requestData.headers.map((header, i) =>
-                i === index ? {...header, [key]: value} : header
-            )
-        };
-        setRequestData(newData)
-        if (id) persistUpdate(id, newData)
-    }
-
-    const deleteParam = async (index: number) => {
-        const newData = {
-            ...requestData,
-            params: requestData.params.filter((_, i) => i !== index)
-        }
-        setRequestData(newData)
-        if (id) persistUpdate(id, newData)
-    }
-
-    const deleteHeader = async (index: number) => {
-        const newData = {
-            ...requestData,
-            headers: requestData.headers.filter((_, i) => i !== index)
-        }
-        setRequestData(newData)
-        if (id) persistUpdate(id, newData)
-    }
 
     return (
         <div className="flex flex-1 overflow-hidden pl-0 md:pl-10">
@@ -526,14 +130,14 @@ export default function Home() {
                                 <ToolTipComponent data={data.name} isFirst={key === 0}/>
                             </div>
 
-                            {showTrash && (
-                                <div onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(data.id);
-                                }} className="flex-shrink-0 flex justify-end">
-                                    <CiTrash className="h-4 w-4 fill-rose-400 group-hover:fill-red-500"/>
-                                </div>
-                            )}
+                            {/*{showTrash && (*/}
+                            {/*    <div onClick={(e) => {*/}
+                            {/*        e.stopPropagation();*/}
+                            {/*        handleDeleteClick(data.id);*/}
+                            {/*    }} className="flex-shrink-0 flex justify-end">*/}
+                            {/*        <CiTrash className="h-4 w-4 fill-rose-400 group-hover:fill-red-500"/>*/}
+                            {/*    </div>*/}
+                            {/*)}*/}
                         </div>
                     ))}
                 </div>
@@ -604,7 +208,7 @@ export default function Home() {
                     {/*테이블 탭*/}
                     {apis && apis.map((data, key) => (
                         <ApiRequestComponent onDelete={async () => {
-                            await deleteApiRequest(data.id)
+                            await deleteApiRequest()
                         }} onGet={async () => {
                             setId(data.id)
                         }} isDeletable={data.is_deletable} isActive={id === data.id} key={key} name={data.name}
@@ -622,13 +226,12 @@ export default function Home() {
                 <div className="text-[12px] min-h-[420px]  border-b border-zinc-800 flex flex-1 flex-col">
                     {/*요청입력*/}
                     <div className="flex text-[12px] rounded p-2">
-                        <div ref={httpMethodDropdownRef} onClick={() => setIsHttpMethodOpen(!isHttpMethodOpen)}
+                        <div ref={httpMethodRef} onClick={() => setDropdowns(prev => ({...prev, httpMethod: !dropdowns.httpMethod}))}
                              className="flex rounded-l relative items-center border border-r-0  text-green-400 cursor-pointer !bg-[#1c1c1e] border-zinc-800 py-1.5 px-5 pl-3 outline-none space-x-5">
                             <div className={`font-bold ${methodColor}`}>{requestData.method}</div>
-                            {isHttpMethodOpen &&
-                                <HttpMethodDropdown updateMethod={updateMethod} isHttpMethodOpen={isHttpMethodOpen}
-                                                    setIsHttpMethodOpen={setIsHttpMethodOpen}
-                                                    setSelectedHttpMethod={setSelectedHttpMethod}/>}
+                            {dropdowns.httpMethod &&
+                                <HttpMethodDropdown updateField={updateField} dropdowns={dropdowns}
+                                                    setDropdowns={setDropdowns}/>}
                             <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
                         </div>
 
@@ -660,12 +263,12 @@ export default function Home() {
                             <div className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold">
                                 <div>쿼리 파라미터 목록</div>
                                 <div className="flex flex-1 justify-end space-x-3 mr-1">
-                                    <div className="cursor-pointer"><FaPlus onClick={() => addParam()}
+                                    <div className="cursor-pointer"><FaPlus onClick={() => addDict('params')}
                                                                             className="h-3.5 w-3.5 text-gray-300 hover:text-gray-400"/></div>
                                 </div>
                             </div>
                             {requestData && requestData.params.map((data, key) => (
-                                <QueryParameterComponent key={key} index={key} deleteFiled={deleteParam} updateFiled={updateParam} data={data} />
+                                <QueryParameterComponent key={key} index={key} deleteDict={deleteDict} updateDict={updateDict} data={data} />
                             ))}
                         </>
                     )}
@@ -674,10 +277,10 @@ export default function Home() {
                         <>
                             <div className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold space-x-3 items-center">
                                 <div>컨텐츠 종류</div>
-                                <div ref={contentDropdownRef}  onClick={() => setContentDropdownOpen(!contentDropdownOpen)} className="flex space-x-1 items-center mb-0.5 cursor-pointer relative hover:text-zinc-300">
+                                <div ref={contentRef}  onClick={() => setDropdowns(prev => ({...prev, content: !dropdowns.content}))} className="flex space-x-1 items-center mb-0.5 cursor-pointer relative hover:text-zinc-300">
                                     <div>{requestData.body_type}</div>
                                     <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
-                                    <ContentTypeDropdown contentDropdownOpen={contentDropdownOpen} setContentDropdownOpen={setContentDropdownOpen} updateField={updateField} selected={requestData!.body_type!}/>
+                                    <ContentTypeDropdown dropdowns={dropdowns} setDropdowns={setDropdowns} updateField={updateField} selected={requestData!.body_type!}/>
                                 </div>
                             </div>
                             <CodeEditor body_content={requestData!.body_content!} updateField={updateField} />
@@ -689,26 +292,38 @@ export default function Home() {
                             <div className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold">
                                 <div>헤더 목록</div>
                                 <div className="flex flex-1 justify-end space-x-3 mr-1">
-                                    <div className="cursor-pointer"><FaPlus onClick={() => addHeader()}
+                                    <div className="cursor-pointer"><FaPlus onClick={() => addDict('headers')}
                                                                             className="h-3.5 w-3.5 text-gray-300 hover:text-gray-400"/></div>
                                 </div>
                             </div>
                             {requestData && requestData.headers.map((data, key) => (
-                                <QueryParameterComponent key={key} index={key} deleteFiled={deleteHeader} updateFiled={updateHeader} data={data} />
+                                <QueryParameterComponent key={key} index={key} deleteDict={deleteDict} updateDict={updateDict} data={data} />
                             ))}
                         </>
                     )}
 
                     {activeTab === '인증' && (
                         <>
-                            <div ref={authDropdownRef} className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold space-x-3 items-center">
+                            <div ref={authRef} className="flex border-y border-zinc-800 py-1.5 px-2 text-zinc-500 font-bold space-x-3 items-center">
                                 <div>인증유형</div>
-                                <div onClick={() => setAuthDropdownOpen(!authDropdownOpen)} className="flex space-x-1 items-center mb-0.5 cursor-pointer relative hover:text-zinc-300">
+                                <div onClick={() => setDropdowns(prev => ({...prev, auth: !dropdowns.auth}))} className="flex space-x-1 items-center mb-0.5 cursor-pointer relative hover:text-zinc-300">
                                     <div>{requestData.auth_type}</div>
                                     <div><IoIosArrowDown className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
-                                    <AuthTypeDropdown authDropdownOpen={authDropdownOpen} setAuthDropdownOpen={setAuthDropdownOpen} updateField={updateField} selected={requestData!.auth_type!}/>
+                                    <AuthTypeDropdown dropdowns={dropdowns} setDropdowns={setDropdowns} updateField={updateField} selected={requestData!.auth_type!}/>
                                 </div>
                             </div>
+                            {requestData && requestData.auth_type === 'Bearer' ? (
+                                <div>
+                                    <div className="flex flex-1">
+                                        <div className="outline-none basis-1/8 border-r py-2 px-3 border-b border-zinc-800">토큰</div>
+                                        <input type="text" placeholder={`Bearer 토큰을 입력해 주세요.`} onChange={(e) => updateField('auth_content', e.target.value)}
+                                               className="outline-none basis-7/8 border-r py-2 px-3 border-b border-zinc-800"/>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div>test2</div>
+                            )
+                            }
                         </>
                     )}
                 </div>

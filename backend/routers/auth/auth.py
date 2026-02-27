@@ -71,9 +71,7 @@ async def auth (
     session.commit()
     session.refresh(user)
     res = await get_api_requests(session, user)
-    print(res)
     if not res:
-        print('tset')
         api_request_create = ApiRequestCreate (
 
         )

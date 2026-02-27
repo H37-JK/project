@@ -1,11 +1,12 @@
 'use client';
 
-import {ChevronDown, Check, RefreshCw} from 'lucide-react';
 import {ApiRequestUpdate} from "@/constants/api";
+import {DropdownState} from "@/components/dropdown/HttpMethodDropdown";
+import React from "react";
 
 interface contentTypeDropDownProps {
-    authDropdownOpen: boolean
-    setAuthDropdownOpen: (isOpen: boolean) => void
+    dropdowns: DropdownState
+    setDropdowns: React.Dispatch<React.SetStateAction<DropdownState>>
     updateField: (key: keyof ApiRequestUpdate, value: any) => void
     selected: string
 }
@@ -15,10 +16,10 @@ const authOptions = [
     "Bearer", "OAuth 2.0", "JWT"
 ];
 
-const AuthTypeDropdown = ({authDropdownOpen, setAuthDropdownOpen, updateField, selected}: contentTypeDropDownProps) => {
+const AuthTypeDropdown = ({dropdowns, setDropdowns, updateField, selected}: contentTypeDropDownProps) => {
     return (
         <>
-            {authDropdownOpen && (
+            {dropdowns.auth && (
                 <div className="absolute top-8 left-1 z-50 w-[220px]">
                     <div
                         className="absolute -top-2 left-8 w-4 h-4 bg-[#1e1e1e] border-t border-l border-[#333] transform rotate-45 z-0 rounded-sm"></div>
@@ -33,7 +34,7 @@ const AuthTypeDropdown = ({authDropdownOpen, setAuthDropdownOpen, updateField, s
                                                 key={option}
                                                 onClick={() => {
                                                     updateField('auth_type', option)
-                                                    setAuthDropdownOpen(false)
+                                                    setDropdowns((prev) => ({...prev, auth: false}));
                                                 }}
                                                 className={`flex items-center cursor-pointer w-full px-4 py-2 text-sm transition-colors hover:bg-[#333333] ${
                                                     isSelected ? "text-indigo-400" : "text-gray-300"

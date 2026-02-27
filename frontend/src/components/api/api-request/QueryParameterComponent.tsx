@@ -4,27 +4,26 @@ import React from "react";
 interface QueryParameterProps {
     data: Record<string, any>
     index: number
-    deleteFiled: (index: number) => void
-    updateFiled: (index: number, key: string, value: any) => void
+    deleteDict: (field: 'params' | 'headers',  index: number) => void
+    updateDict: (field: 'params' | 'headers', index: number, key: string, value: any) => void
 }
 
-const QueryParameterComponent = ({data, index, deleteFiled, updateFiled} : QueryParameterProps) => {
-
+const QueryParameterComponent = ({data, index, deleteDict, updateDict} : QueryParameterProps) => {
 
     return (
         <div>
             <div className="flex flex-1">
-                <input type="text" placeholder="키" value={data.key} onChange={(e) => updateFiled(index,'key', e.target.value)}
+                <input type="text" placeholder="키" value={data.key} onChange={(e) => updateDict('params', index,'key', e.target.value)}
                        className="outline-none basis-9/28 border-r py-2 px-3 border-b border-zinc-800"/>
-                <input type="text" placeholder="값" value={data.value} onChange={(e) => updateFiled(index,'value', e.target.value)}
+                <input type="text" placeholder="값" value={data.value} onChange={(e) => updateDict('params', index,'value', e.target.value)}
                        className="outline-none basis-9/28 border-r py-2 px-3 border-b border-zinc-800"/>
-                <input type="text" placeholder="설명" value={data.desc} onChange={(e) => updateFiled(index,'desc', e.target.value)}
+                <input type="text" placeholder="설명" value={data.desc} onChange={(e) => updateDict('params', index,'desc', e.target.value)}
                        className="outline-none basis-8/28 border-r py-2 px-3 border-b border-zinc-800"/>
                 <div
                     className="outline-none basis-1/28  border-r py-2 px-3 border-b border-zinc-800 flex items-center">
                     {data.active ? (
                         <svg onClick={() => {
-                            updateFiled(index, 'active', false)
+                            updateDict('params', index, 'active', false)
                         }} viewBox="0 0 24 24" width="1.2em" height="1.2em" className="svg-icons fill-green-500 text-green-600 cursor-pointer">
                             <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
                                strokeWidth="2">
@@ -34,7 +33,7 @@ const QueryParameterComponent = ({data, index, deleteFiled, updateFiled} : Query
                         </svg>
                     ) : (
                         <svg onClick={() => {
-                            updateFiled(index, 'active', true)
+                            updateDict('params', index, 'active', true)
                         }} viewBox="0 0 24 24" width="1.2em" height="1.2em"
                              className="svg-icons fill-green-500 text-green-600 cursor-pointer">
                             <circle className="" cx="12" cy="12" r="10" fill="none" stroke="currentColor"
@@ -44,7 +43,7 @@ const QueryParameterComponent = ({data, index, deleteFiled, updateFiled} : Query
                 </div>
                 <div
                     className="outline-none  basis-1/28 border-r py-2 px-3 border-b border-zinc-800 flex items-center cursor-pointer">
-                    <CiTrash onClick={() => deleteFiled(index)} className="h-4 w-4 fill-rose-400 group-hover:fill-red-500"/>
+                    <CiTrash onClick={() => deleteDict('params', index)} className="h-4 w-4 fill-rose-400 group-hover:fill-red-500"/>
                 </div>
             </div>
         </div>

@@ -1,12 +1,13 @@
 'use client';
 
-import {useState} from 'react';
-import {ChevronDown, Check, RefreshCw} from 'lucide-react';
+import {Check} from 'lucide-react';
 import {ApiRequestUpdate} from "@/constants/api";
+import {DropdownState} from "@/components/dropdown/HttpMethodDropdown";
+import React from "react";
 
 interface contentTypeDropDownProps {
-    contentDropdownOpen: boolean
-    setContentDropdownOpen:(isOpen: boolean) => void
+    dropdowns: DropdownState
+    setDropdowns: React.Dispatch<React.SetStateAction<DropdownState>>
     updateField:(key: keyof ApiRequestUpdate, value: any) => void
     selected: string
 }
@@ -32,10 +33,10 @@ const contentTypes = [
     },
 ]
 
-const ContentTypeDropdown = ({contentDropdownOpen, setContentDropdownOpen, updateField, selected}: contentTypeDropDownProps) => {
+const ContentTypeDropdown = ({dropdowns, setDropdowns, updateField, selected}: contentTypeDropDownProps) => {
     return (
        <>
-           {contentDropdownOpen && (
+           {dropdowns.content && (
                <div className="absolute top-8 left-1 z-50 w-[300px]">
                    <div
                        className="absolute -top-2 left-8 w-4 h-4 bg-[#1e1e1e] border-t border-l border-[#333] transform rotate-45 z-0 rounded-sm"></div>
@@ -55,7 +56,7 @@ const ContentTypeDropdown = ({contentDropdownOpen, setContentDropdownOpen, updat
                                                key={item}
                                                onClick={() => {
                                                    updateField('body_type', item);
-                                                   setContentDropdownOpen(false);
+                                                   setDropdowns((prev) => ({...prev, content: false}));
                                                }}
                                                className={`cursor-pointer w-full flex items-center justify-between px-4 py-2 text-sm transition-colors
                                               ${isSelected ? 'bg-[#2a2a2a] text-white font-semibold' : 'text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200'}

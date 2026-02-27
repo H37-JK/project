@@ -25,7 +25,7 @@ export default function GoogleCallback() {
                 }
             });
         } else if (router.isReady && !access_token) {
-            router.push("/login");
+            router.push("/");
         }
     }, [router, router.isReady, router.query]);
 

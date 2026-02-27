@@ -24,7 +24,7 @@ export default function Home() {
     const [isMenuToggle, setIsMenuToggle] = useState(true)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const {setIsStarted} = AgentStore()
+    const {isStarted, setIsStarted} = AgentStore()
 
     const handleIsMenuToggle = () => {
         setIsMenuToggle(!isMenuToggle)
@@ -33,7 +33,6 @@ export default function Home() {
     const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
-
             await createAgent()
         }
     }
