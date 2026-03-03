@@ -1,10 +1,8 @@
 import {useState} from "react";
 import {WebAnalyze} from "@/constants/web-analyze";
 import useSWR from "swr";
-import {ApiRequest} from "@/constants/api";
 import {getFetcher, postFetcher} from "@/lib/axios";
 import useSWRMutation from "swr/mutation";
-import {useWebAnalyzeUiHooks} from "@/hooks/web-analyze/ui/useWebAnalyzeUiHooks";
 import axios from "axios";
 
 
@@ -45,6 +43,7 @@ export function useWebAnalyzeDataHooks() {
         try {
             if (!domain) {
                 handleIsShowAlert()
+                setErrorMessage('주소를 입력해 주세요.')
                 return false
             }
 
@@ -83,7 +82,6 @@ export function useWebAnalyzeDataHooks() {
             if (axios.isAxiosError(error)) {
                 const message = error?.response?.data.detail
                 setErrorMessage(message)
-                console.log(error?.response, error?.response.data, error?.response?.data.detail, errorMessage)
 
                 if (Array.isArray(errorMessage)) {
                     console.log("유효성 검사 에러:", errorMessage[0].msg);

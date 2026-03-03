@@ -1,8 +1,8 @@
 import WebAnalyzeComponent from "@/components/web-analyze/WebAnalyzeComponent";
 import {useWebAnalyzeDataHooks} from "@/hooks/web-analyze/data/useWebAnalyzeDataHooks";
 import React from "react";
-import {useWebAnalyzeUiHooks} from "@/hooks/web-analyze/ui/useWebAnalyzeUiHooks";
-import {useUiHooks} from "@/hooks/common/ui/useUiHooks";
+import {useWebAnalyzeUIHooks} from "@/hooks/web-analyze/ui/useWebAnalyzeUIHooks";
+import {useUIHooks} from "@/hooks/common/ui/useUIHooks";
 
 
 export default function Home() {
@@ -20,7 +20,7 @@ export default function Home() {
     } = useWebAnalyzeDataHooks()
 
 
-    useUiHooks({
+    useUIHooks({
         onCallRequest: createWebAnalyzeRequest,
         canSend: !!domain
     });
@@ -36,7 +36,7 @@ export default function Home() {
                             분석 할 주소를 입력해 주세요.<span className="text-xl"></span>
                         </label>
 
-                        <input value={domain} onChange={(e => setDomain(e.target.value))}
+                        <input value={domain!} onChange={(e => setDomain(e.target.value))}
                                type="text"
                                placeholder="google.com"
                                className="w-full bg-[#0a0a0a] border border-zinc-700 text-zinc-300 p-4 text-xl rounded-md focus:outline-none focus:border-zinc-500 transition-colors"
@@ -52,7 +52,7 @@ export default function Home() {
                                 style={{width: `${progress}%`}}
                             />
                             <div
-                                className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#000_0%,#000_70%,#737373_100%)]"/>
+                                className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#111_0%,#000_70%,#737373_100%)]"/>
                             <div
                                 className="relative bg-[#0a0a0a] w-full py-4 rounded-md flex flex-col items-center justify-center">
                             <span className="text-zinc-400 text-2xl font-bold">

@@ -109,7 +109,7 @@ export default function Home() {
                 </div>
 
                 {/*에이전트 리스트*/}
-                <div className="flex flex-col text-sm overflow-hidden border-zinc-800 mb-2">
+                <div className="flex flex-col text-sm border-zinc-800 mb-2">
                     {isLoading && (
                         <div className="flex flex-col">
                             {[...Array(20)].map((_, i) => <SkeletonComponent key={i}/>)}
@@ -122,7 +122,7 @@ export default function Home() {
                                 <IoLogoChrome className="h-4 w-4 fill-gray-400 group-hover:fill-white"/>
                             </div>
 
-                            <div className="relative flex-1 min-w-0 group/text">
+                            <div className="relative flex-1 min-w-0 group/text hover:z-[50]">
                                 <div className="text-zinc-300 group-hover:text-white truncate">
                                     {data.prompt}
                                 </div>

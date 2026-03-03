@@ -17,8 +17,8 @@ import CodeEditor from "@/components/editor/CodeEditor";
 import SpinnerComponent from "@/components/spinner/SpinnerComponent";
 import AuthTypeDropdown from "@/components/dropdown/AuthTypeDropdown";
 import {useApiDataHooks} from "@/hooks/api-request/data/useApiDataHooks";
-import {useUiHooks} from "@/hooks/common/ui/useUiHooks";
-import {useApiUIHooks} from "@/hooks/api-request/ui/useApiUiHooks";
+import {useUIHooks} from "@/hooks/common/ui/useUIHooks";
+import {useApiUIHooks} from "@/hooks/api-request/ui/useApiUIHooks";
 
 const methodColorMap: Record<string, string> = {
     GET: "text-emerald-400",
@@ -37,7 +37,7 @@ export default function Home() {
     const {id, setId, requestData, setRequestData, historyData, apis, api, apisIsLoading, errorMessage, createApiRequest, deleteApiRequest, callApiRequest, callMutating, updateField, addDict, updateDict, deleteDict, saveTimerRef, latestIdRef, latestRequestDataRef, pretty} = useApiDataHooks()
     const {activeTab, setActiveTab, tabs, isShowAlert, setIsShowAlert, showTrash, setShowTrash, dropdowns, setDropdowns, toggleDropdown, isMenuToggle, setIsMenuToggle, httpMethodRef, contentRef, authRef, handleIsShowAlert, handleIsMenuToggle} = useApiUIHooks()
 
-    useUiHooks({
+    useUIHooks({
         onCallRequest: callApiRequest,
         canSend: !!id
     });

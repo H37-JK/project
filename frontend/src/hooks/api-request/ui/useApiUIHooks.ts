@@ -2,10 +2,6 @@ import {useEffect, RefObject, useState, useRef, useCallback} from 'react'
 import {useApiDataHooks} from "@/hooks/api-request/data/useApiDataHooks";
 import {requestIdleCallback} from "next/dist/client/request-idle-callback";
 
-interface ApiUiProps {
-    onCallRequest: () => void;
-    canSend: boolean;
-}
 
 export function useClickOutside(ref: RefObject<HTMLElement | null>, handler: () => void) {
     useEffect(() => {

@@ -10,17 +10,11 @@ import {BsSend} from "react-icons/bs";
 import {LuRefreshCw} from "react-icons/lu";
 import {ImSpinner2} from "react-icons/im";
 import {useState} from "react";
-import CustomCheckBox from "@/components/checkbox/CustomCheckBox";
-import TableColumnData from "@/api/table/TableColumnData";
-import TableColumnComponent from "@/components/table/TableColumnComponent";
-import TableValueData from "@/api/table/TableValueData";
-import TableValueComponent from "@/components/table/TableValueComponent";
-import SnippetData from "@/api/sql/SnippetData";
-import SnippetComponent from "@/components/sql/SnippetComponent";
+
 import {MdTextSnippet} from "react-icons/md";
 import CodeEditor from "@/components/editor/CodeEditor";
 import {IoIosArrowDown} from "react-icons/io";
-import ApiRequestData from "@/api/api-request/ApiRequestData";
+
 import {RiDeleteBin6Line} from "react-icons/ri";
 import {FaPlus} from "react-icons/fa6";
 import JsonEditor from "@/components/editor/JsonEditor";
@@ -28,9 +22,7 @@ import {IoIosSave} from "react-icons/io";
 import {AiOutlineEnter} from "react-icons/ai";
 import {FaArrowTurnDown} from "react-icons/fa6";
 import {FaArrowTurnUp} from "react-icons/fa6";
-import {FaCartArrowDown} from "react-icons/fa";
 import {MdSubdirectoryArrowLeft} from "react-icons/md";
-import {CiCirclePlus} from "react-icons/ci";
 import {GoPlusCircle} from "react-icons/go";
 import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
@@ -82,9 +74,7 @@ export default function Home() {
                 {/*스니펫 리스트*/}
                 <div className="flex flex-col text-sm overflow-auto border-b border-zinc-800 mb-2">
                     <h4 className="text-md py-1.5 p-4 text-zinc-400">플레이그라운드 (2)</h4>
-                    {ApiRequestData().map((data, key) => (
-                        <SnippetComponent name={data.name} key={key}/>
-                    ))}
+
                 </div>
 
 

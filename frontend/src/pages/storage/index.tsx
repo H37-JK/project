@@ -1,7 +1,5 @@
 import {LuRefreshCw} from "react-icons/lu";
 import {ImSpinner2} from "react-icons/im";
-import {useState} from "react";
-import {MdTextSnippet} from "react-icons/md";
 import {IoIosArrowForward} from "react-icons/io";
 import {FiUpload} from "react-icons/fi";
 import {FaFolderPlus} from "react-icons/fa";
@@ -10,66 +8,55 @@ import CancelIconCompomponent from "@/components/icon/CancelIconCompomponent";
 import {GoDownload} from "react-icons/go";
 import {FaCopy} from "react-icons/fa";
 import {RiDeleteBin6Line} from "react-icons/ri";
+import {useStorageUIHooks} from "@/hooks/storage/ui/useStorageUIHooks";
+import {useStorageDataHooks} from "@/hooks/storage/data/useStorageDataHooks";
+import ToolTipComponent from "@/components/tooltip/TooltipComponent";
+import React from "react";
+import {formatBytesToHumanReadable} from "@/lib/file";
 
 export default function Home() {
-
-    const [email, setEmail] = useState('these990703@gmail.com')
-    const [isRefreshing, setIsRefreshing] = useState(false)
-    const [isMenuToggle, setIsMenuToggle] = useState(true)
-    const [isSearchToggle, setIsSearchToggle] = useState(false)
-    const [isFileToggle, setIsFileToggle] = useState(true)
-
-    const handleRefresh = () => {
-        setIsRefreshing(true)
-
-        setTimeout(() => {
-            setIsRefreshing(false)
-        }, 1500)
-    }
-
-    const handelIsMenuToggle = () => {
-        setIsMenuToggle(!isMenuToggle)
-    }
-
-    const handleIsSearchToggle = () => {
-        setIsSearchToggle(!isSearchToggle)
-    }
-
-    const handleIsFileToggle = () => {
-        setIsFileToggle(!isFileToggle)
-    }
+    const {id, setId, files, file, handleFileOnChange, fileUploadRequest} = useStorageDataHooks()
+    const {isRefreshing, isMenuToggle, isSearchToggle, isFileToggle, showTrash, setShowTrash, handleRefresh, handleIsMenuToggle, handleIsSearchToggle, handleIsFileToggle, fileRef, onFileClick} = useStorageUIHooks()
 
     return (
         <div className="flex flex-1 overflow-hidden pl-0 md:pl-10">
             {/*메뉴*/}
-            <div style={{flex: '15.5 1 0px'}}
-                 className={`${isMenuToggle ? 'min-w-64 max-w-[32rem] border-r' : 'border-0 min-w-0 max-w-0 w-0'} hidden md:flex transition-all duration-150 ease-linear flex-col border-zinc-800 z-10 box-content overflow-hidden`}>
-                <div className="border-b border-zinc-800 min-h-12 px-6 flex items-center">
-                    <h4 className="text-lg">스토리지</h4>
-                </div>
+            {/*<div style={{flex: '15.5 1 0px'}}*/}
+            {/*     className={`${isMenuToggle ? 'min-w-64 max-w-[32rem] border-r' : 'border-0 min-w-0 max-w-0 w-0'} hidden md:flex transition-all duration-150 ease-linear flex-col border-zinc-800 z-10 box-content overflow-hidden`}>*/}
+            {/*    <div className="border-b border-zinc-800 min-h-10 px-4 flex items-center">*/}
+            {/*        <h4 className="text-md">스토리지</h4>*/}
+            {/*        <div className="flex flex-1 justify-end">*/}
+            {/*            <LuPencilLine onClick={() => setShowTrash(!showTrash)}*/}
+            {/*                          className="h-4 w-4 text-zinc-400 cursor-pointer hover:text-zinc-300"/>*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
 
 
-                {/*스토리지 리스트*/}
-                <div className="flex flex-col text-sm overflow-auto border-b border-zinc-800 mb-2">
-                    <h4 className="text-ms py-1 p-4 text-zinc-400">저장소</h4>
-                    <div
-                        className="flex group items-center  cursor-pointer hover:bg-zinc-800 p-4 py-1.5 gap-2 text-md">
-                        <div><MdTextSnippet className="h-4 w-4 fill-gray-400 group-hover:fill-white"/></div>
-                        <div className="text-zinc-300 group-hover:text-white">파일</div>
-                    </div>
-                </div>
+            {/*    /!*스토리지 리스트*!/*/}
+            {/*    <div className="flex flex-col text-sm overflow-auto border-b border-zinc-800 mb-2">*/}
+            {/*        <div*/}
+            {/*            className="flex group items-center  cursor-pointer hover:bg-zinc-800 p-4 py-1.5 gap-2 text-md">*/}
+            {/*            <div><MdTextSnippet className="h-4 w-4 fill-gray-400 group-hover:fill-white"/></div>*/}
+            {/*            <div className="text-zinc-300 group-hover:text-white">파일</div>*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
 
-            </div>
+            {/*</div>*/}
 
-            <div style={{flex: '84.5 1 0px'}} className="flex flex-col overflow-hidden">
-                {/*컨텐츠*/}
-                <div className="p-3 px-6 flex flex-col flex-1 overflow-hidden">
-                    <div className="flex space-x-1.5 items-center">
+            <div style={{flex: '100 1 0px'}} className="flex flex-col overflow-hidden">
+                <div className="border-b border-zinc-800 min-h-10 flex">
+
+                    <div className="flex space-x-1.5 items-center ml-2">
                         <h2 className="text-md text-zinc-500">파일</h2>
                         <div><IoIosArrowForward className="h-3 w-3 fill-gray-400 group-hover:fill-white"/></div>
                         <div>이미지</div>
                     </div>
 
+                </div>
+
+
+                {/*컨텐츠*/}
+                <div className="p-3 px-6 flex flex-col flex-1 overflow-hidden">
                     <div className="border border-zinc-800 rounded-md flex flex-1 flex-col m-0.5 mt-3 overflow-hidden">
                         <div className="border-b border-zinc-800 bg-[rgba(31,31,31,0.5)]">
                             <div
@@ -90,7 +77,14 @@ export default function Home() {
                                     </div>
                                     <div>폴더생성</div>
                                 </div>
-                                <div className="flex items-center cursor-pointer hover:bg-zinc-800 pr-1 rounded-md">
+                                <input
+                                    type="file"
+                                    ref={fileRef}
+                                    onChange={handleFileOnChange}
+                                    style={{ display: 'none' }}
+                                    accept="image/*, video/*"
+                                />
+                                <div onClick={onFileClick} className="flex items-center cursor-pointer hover:bg-zinc-800 pr-1 rounded-md">
                                     <div
                                         className="flex items-center justify-center rounded px-1.5 py-1.5 cursor-pointer">
                                         <FiUpload className="h-3.5 w-3.5"/>
@@ -128,42 +122,65 @@ export default function Home() {
                             <div
                                 className="flex-1 flex-col border-r overflow-auto max-h-full divide-y divide-zinc-800 border-zinc-800 hidden md:flex"
                                 style={{flex: '22 1 0px'}}>
+                                {files && files.map((data, key) => (
+                                    <div onClick={() => setId(data.id)} className="relative min-w-0 group/text cursor-pointer hover:bg-zinc-800" key={key}>
+                                        <div className="p-2 px-4 truncate w-full" title={data.filename}>
+                                            {data.filename}
+                                        </div>
 
+                                        <ToolTipComponent data={data.filename} isFirst={key === 0}/>
+                                    </div>
+                                ))}
                             </div>
                             <div className="flex flex-1" style={{flex: '78 1 0px'}}>
                                 <div className="hidden md:flex flex-1"></div>
 
                                 {/*파일 정보*/}
                                 {isFileToggle &&
-                                    <div className="flex justify-end bg-[rgba(31,31,31,0.5)] w-full md:w-2/5 p-3">
+                                    <div className="flex justify-end bg-[rgba(31,31,31,0.5)] w-full md:w-3/5 p-3">
                                         <div className="flex flex-col space-y-2 w-full p-3">
                                             <div className="flex justify-end" onClick={handleIsFileToggle}>
                                                 <CancelIconCompomponent/></div>
-                                            <div className="border border-zinc-700 flex flex-1 max-h-68 mb-5">
-                                                <div
-                                                    className="flex w-full h-auto items-center justify-center bg-contain bg-center bg-no-repeat bg-[url(https://jekqhvopmyflluxqqxll.supabase.co/storage/v1/object/sign/images/KakaoTalk_20251002_122923622_26.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lYzUzOTNhNC1iNDc4LTQzZjktYjA5OC01YTFlMWNiNjI3OTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvS2FrYW9UYWxrXzIwMjUxMDAyXzEyMjkyMzYyMl8yNi5qcGciLCJpYXQiOjE3NjMwMDQ2MjksImV4cCI6MTc2MzYwOTQyOX0.gPVo8xQ1Rn7XUXZ1rsBxkb3DuIWGAs9r6Rvhqjmqqes)]"></div>
-                                                {/*<video src="https://jekqhvopmyflluxqqxll.supabase.co/storage/v1/object/sign/images/123/ForBiggerBlazes.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lYzUzOTNhNC1iNDc4LTQzZjktYjA5OC01YTFlMWNiNjI3OTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvMTIzL0ZvckJpZ2dlckJsYXplcy5tcDQiLCJpYXQiOjE3NjMwMTQ5NjMsImV4cCI6MTc2MzYxOTc2M30.NsrgvSeGlmVrSpiSNUqGkUb4h0e_EionXuNGWG3uNWY" autoPlay="true" muted="true" className="h-full w-full"/>*/}
+                                            <div className="w-full h-96 border border-zinc-700 mb-5 overflow-hidden bg-zinc-900/50 flex items-center justify-center">
+                                                {file?.url &&
+                                                file.url.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                    <video
+                                                        src={file?.url}
+                                                        autoPlay
+                                                        muted
+                                                        controls
+                                                        playsInline
+                                                        className="w-full h-full object-contain"
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={file?.url}
+                                                        alt="Uploaded content"
+                                                        className="w-full h-full object-contain"
+                                                    />
+                                                )
+                                                }
                                             </div>
-                                            <h2 className="text-xl">베어브릭 사진.jpg</h2>
-                                            <span className="text-zinc-400">image/jpeg - 4.62MB</span>
+                                            <h2 className="text-xl">{file?.filename}</h2>
+                                            <span className="text-zinc-400">{file?.content_type} - {formatBytesToHumanReadable(file?.size)}</span>
                                             <div className="text-zinc-500 text-xs mt-3">생성일</div>
-                                            <div className="text-zinc-400">2025.11.13 오후 3:31:42</div>
+                                            <div className="text-zinc-400">{file?.create_at}</div>
                                             <div className="text-zinc-500 text-xs mt-3">수정일</div>
-                                            <div className="text-zinc-400">2025.11.13 오후 3:31:42</div>
+                                            <div className="text-zinc-400">{file?.update_at}</div>
 
-                                            <div className="flex space-x-1 mt-2 -ml-1">
+                                            <div className="grid grid-col-1 md:grid-cols-2 lg:grid-cols-3 mt-2 -ml-1 gap-2">
                                                 <button type="button"
-                                                        className="border border-zinc-800 rounded-md px-3 space-x-1.5 text-xs py-1 flex items-center cursor-pointer hover:bg-zinc-700">
+                                                        className="max-w-24 md:max-w-full border border-zinc-800 rounded-md px-3 space-x-1.5 text-xs py-1 flex items-center cursor-pointer hover:bg-zinc-700">
                                                     <div className="pb-0.5"><GoDownload className="h-3.5 w-3.5"/></div>
                                                     <div>다운로드</div>
                                                 </button>
                                                 <button type="button"
-                                                        className="border border-zinc-800 rounded-md px-3 space-x-1.5 text-xs py-1 flex items-center cursor-pointer hover:bg-zinc-700">
+                                                        className="max-w-24 md:max-w-full border border-zinc-800 rounded-md px-3 space-x-1.5 text-xs py-1 flex items-center cursor-pointer hover:bg-zinc-700">
                                                     <div className="pb-0.5"><FaCopy className="h-3.5 w-3.5"/></div>
                                                     <div>링크복사</div>
                                                 </button>
                                                 <button type="button"
-                                                        className="border border-zinc-800 rounded-md px-3 space-x-1.5 text-xs py-1 flex items-center cursor-pointer hover:bg-zinc-700">
+                                                        className="max-w-24 md:max-w-full border border-zinc-800 rounded-md px-3 space-x-1.5 text-xs py-1 flex items-center cursor-pointer hover:bg-zinc-700">
                                                     <div className="pb-0.5"><RiDeleteBin6Line className="h-3.5 w-3.5"/>
                                                     </div>
                                                     <div>삭제</div>

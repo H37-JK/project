@@ -41,7 +41,7 @@ async def get_file (
     return session.exec(select(File).where(File.user_id == current_user.id, File.id == id)).one_or_none()
 
 
-@router.post("/upload/file/", response_model = FileCreateResponse)
+@router.post("/upload/file", response_model = FileCreateResponse)
 async def create_upload_file (
     upload_file: UploadFile | None,
     current_user: Annotated[User, Depends(get_current_user)],

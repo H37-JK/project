@@ -7,7 +7,7 @@ interface TooltipProps {
 
 const TooltipComponent = ({data, isFirst} : TooltipProps) => {
     return (
-        <div className={`absolute left-0 z-50 invisible opacity-0 
+        <div className={`absolute left-0 !z-999 invisible opacity-0 
                         group-hover/text:visible group-hover/text:opacity-100 
                         transition-all duration-200 pointer-events-none
                         ${isFirst ? 'top-full mt-2' : 'bottom-full mb-2'} 
@@ -17,11 +17,12 @@ const TooltipComponent = ({data, isFirst} : TooltipProps) => {
                             rounded-md px-2 py-1.5 shadow-2xl w-48 whitespace-normal break-all">
                 {data}
 
-                {isFirst ? (
-                    <div className="absolute bottom-full left-3 -mb-px border-4 border-transparent border-b-zinc-900"></div>
-                ) : (
-                    <div className="absolute top-full left-3 -mt-px border-4 border-transparent border-t-zinc-900"></div>
-                )}
+                <div className={`absolute left-3 w-2 h-2 bg-zinc-900 border-zinc-700 transform rotate-45
+            ${isFirst
+                    ? '-top-1 border-t border-l' // 툴팁이 아래에 있을 때 (화살표는 위쪽)
+                    : '-bottom-1 border-r border-b' // 툴팁이 위에 있을 때 (화살표는 아래쪽)
+                }`}>
+                </div>
             </div>
         </div>
     )

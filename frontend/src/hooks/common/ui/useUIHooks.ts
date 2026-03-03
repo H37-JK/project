@@ -1,6 +1,11 @@
 import {useEffect, useRef} from "react";
-import {useWebAnalyzeUiHooks} from "@/hooks/web-analyze/ui/useWebAnalyzeUiHooks";
+import {useWebAnalyzeUIHooks} from "@/hooks/web-analyze/ui/useWebAnalyzeUIHooks";
 import {useWebAnalyzeDataHooks} from "@/hooks/web-analyze/data/useWebAnalyzeDataHooks";
+
+interface ApiUiProps {
+    onCallRequest: () => void;
+    canSend: boolean;
+}
 
 export function useHotkeys(key: string, callback: () => void) {
     const callbackRef = useRef(callback)
@@ -24,7 +29,7 @@ export function useHotkeys(key: string, callback: () => void) {
     }, [key]);
 }
 
-export function useUiHooks({onCallRequest, canSend}: ApiUiProps) {
+export function useUIHooks({onCallRequest, canSend}: ApiUiProps) {
     useHotkeys('Enter', () => {
         onCallRequest();
     });
