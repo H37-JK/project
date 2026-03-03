@@ -13,6 +13,7 @@ export default function Home() {
         isAnalyzing,
         domain,
         setDomain,
+        errorMessage,
         webCheck,
         isShowAlert,
         createWebAnalyzeRequest
@@ -64,7 +65,7 @@ export default function Home() {
                     {isShowAlert && (
                         <div className="absolute right-6 bottom-6">
                             <div className="bg-red-400 px-4 py-1.5 rounded-md text-white font-bold text-sm">
-                                주소를 입력해 주세요.
+                                {errorMessage}
                             </div>
                         </div>
                     )}

@@ -5,6 +5,7 @@ import {ApiRequest} from "@/constants/api";
 import {getFetcher, postFetcher} from "@/lib/axios";
 import useSWRMutation from "swr/mutation";
 import {useWebAnalyzeUiHooks} from "@/hooks/web-analyze/ui/useWebAnalyzeUiHooks";
+import axios from "axios";
 
 
 const create_web_analyze_url = '/create/web-analyze'
@@ -18,6 +19,7 @@ export function useWebAnalyzeDataHooks() {
     const [requestData, setRequestData] = useState<WebAnalyze | null>(null)
     const { data: webCheck, isLoading: webCheckIsLoading, mutate: webCheckMutate  } = useSWR<WebAnalyze>(id ? `${get_web_analyze_url}/${id}` : null, getFetcher)
     const [isShowAlert, setIsShowAlert] = useState<boolean>(false)
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const handleIsShowAlert = () => {
         setIsShowAlert(true)
@@ -75,9 +77,20 @@ export function useWebAnalyzeDataHooks() {
             }, 500)
 
         } catch (error) {
+            handleIsShowAlert()
             setIsAnalyzing(false);
             setProgress(0);
-            console.error(error)
+            if (axios.isAxiosError(error)) {
+                const message = error?.response?.data.detail
+                setErrorMessage(message)
+                console.log(error?.response, error?.response.data, error?.response?.data.detail, errorMessage)
+
+                if (Array.isArray(errorMessage)) {
+                    console.log("유효성 검사 에러:", errorMessage[0].msg);
+                }
+            } else {
+                console.error("일반 에러:", error);
+            }
         }
     }
 
@@ -94,6 +107,7 @@ export function useWebAnalyzeDataHooks() {
         id, setId,
         progress, isAnalyzing,
         domain, setDomain,
+        errorMessage,
         webCheck,
         isShowAlert, handleIsShowAlert,
         createWebAnalyzeRequest, formatValue
