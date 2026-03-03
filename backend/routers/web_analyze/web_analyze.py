@@ -61,10 +61,6 @@ async def create_web_analyze (
         }
     )
 
-    exist_web = session.exec(select(WebAnalyze).where(WebAnalyze.user_id == current_user.id, WebAnalyze.domain == domain)).one_or_none()
-    if exist_web is not None:
-        web = exist_web
-
     web_analyze.user_id = current_user.id
     web_analyze.domain = domain
     web_analyze.ip = results[0].get("query", "none")

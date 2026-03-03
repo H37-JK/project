@@ -1,13 +1,12 @@
 import {IoLogoChrome} from "react-icons/io5";
 import {TbLayoutSidebarLeftCollapse} from "react-icons/tb";
 import {GoPlus} from "react-icons/go";
-import React, {useEffect, useRef, useCallback} from "react";
+import React from "react";
 import {IoIosArrowDown} from "react-icons/io";
 import {FaPlus} from "react-icons/fa6";
 import JsonEditor from "@/components/editor/JsonEditor";
 import {IoIosSave} from "react-icons/io";
 import {LuPencilLine} from "react-icons/lu";
-import {ApiRequestUpdate} from "@/constants/api";
 import SkeletonComponent from "@/components/skeleton/SkeletonComponent";
 import ToolTipComponent from "@/components/tooltip/TooltipComponent";
 import ApiRequestComponent from "@/components/api/api-request/ApiRequestComponent";
@@ -17,82 +16,31 @@ import ContentTypeDropdown from "@/components/dropdown/ContentTypesDropdown";
 import CodeEditor from "@/components/editor/CodeEditor";
 import SpinnerComponent from "@/components/spinner/SpinnerComponent";
 import AuthTypeDropdown from "@/components/dropdown/AuthTypeDropdown";
-import {useApiDataHooks} from "@/hooks/api/data/useApiDataHooks";
-import {useApiUIHooks, useClickOutside} from "@/hooks/api/ui/useApiUiHooks";
+import {useApiDataHooks} from "@/hooks/api-request/data/useApiDataHooks";
+import {useUiHooks} from "@/hooks/common/ui/useUiHooks";
+import {useApiUIHooks} from "@/hooks/api-request/ui/useApiUiHooks";
+
+const methodColorMap: Record<string, string> = {
+    GET: "text-emerald-400",
+    POST: "text-amber-500",
+    PUT: "text-sky-400",
+    PATCH: "text-purple-400",
+    DELETE: "text-red-500",
+    HEAD: "text-teal-400",
+    OPTIONS: "text-indigo-400",
+    CONNECT: "text-zinc-400",
+    TRACE: "text-zinc-400",
+    CUSTOM: "text-zinc-400",
+};
 
 export default function Home() {
-    const {id, setId, requestData, setRequestData, historyData, apis, api, apisIsLoading, errorMessage, createApiRequest, deleteApiRequest, callApiRequest, callMutating, updateField, addDict, updateDict, deleteDict, saveTimerRef, latestIdRef, pretty} = useApiDataHooks()
-    const {activeTab, setActiveTab, tabs, isShowAlert, setIsShowAlert, showTrash, setShowTrash, dropdowns, setDropdowns, toggleDropdown, isMenuToggle, setIsMenuToggle, httpMethodRef, contentRef, authRef, handleIsShowAlert, handleIsMenuToggle, methodColor} = useApiUIHooks()
+    const {id, setId, requestData, setRequestData, historyData, apis, api, apisIsLoading, errorMessage, createApiRequest, deleteApiRequest, callApiRequest, callMutating, updateField, addDict, updateDict, deleteDict, saveTimerRef, latestIdRef, latestRequestDataRef, pretty} = useApiDataHooks()
+    const {activeTab, setActiveTab, tabs, isShowAlert, setIsShowAlert, showTrash, setShowTrash, dropdowns, setDropdowns, toggleDropdown, isMenuToggle, setIsMenuToggle, httpMethodRef, contentRef, authRef, handleIsShowAlert, handleIsMenuToggle} = useApiUIHooks()
 
-    const closeHttpMethod = useCallback(() => {
-        setDropdowns(p => ({ ...p, httpMethod: false }));
-    }, []);
-
-    const closeContent = useCallback(() => {
-        setDropdowns(p => ({ ...p, content: false }));
-    }, []);
-
-
-    const closeAuth = useCallback(() => {
-        setDropdowns(p => ({ ...p, auth: false }));
-    }, []);
-
-    useClickOutside(httpMethodRef, closeHttpMethod);
-    useClickOutside(contentRef, closeContent);
-    useClickOutside(authRef, closeAuth);
-
-
-    // useEffect(() => {
-    //     latestRequestDataRef.current = requestData
-    // }, [requestData]);
-
-    const handleCtrlEnter = useCallback(async (event: { ctrlKey: any; metaKey: any; key: string; preventDefault: () => void; }) => {
-        const currentId = latestIdRef.current;
-        if (currentId && (event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-            event.preventDefault();
-            await callApiRequest()
-        }
-    }, []);
-
-    useEffect(() => {
-        document.addEventListener('keydown', handleCtrlEnter)
-        return () => {
-            document.removeEventListener('keydown', handleCtrlEnter)
-        }
-    }, [handleCtrlEnter]);
-
-    useEffect(() => {
-        if (api) {
-            setRequestData({
-                id: api.id,
-                name: api.name,
-                method: api.method,
-                url: api.url,
-                headers: api.headers,
-                params: api.params,
-                body_type: api.body_type,
-                body_content: api.body_content,
-                auth_type: api.auth_type,
-                auth_content: api.auth_content,
-                tab_active: api.tab_active,
-                update_at: api.update_at,
-            })
-        }
-    }, [api, id, setRequestData]);
-
-    useEffect(() => {
-        latestIdRef.current = id;
-        if (saveTimerRef.current) {
-            window.clearTimeout(saveTimerRef.current);
-            saveTimerRef.current = null;
-        }
-    }, [id, latestIdRef, saveTimerRef]);
-
-    useEffect(() => {
-        if (apis && apis.length > 0 && !id) {
-            setId(apis[apis.length - 1].id);
-        }
-    }, [apis, id, setId]);
+    useUiHooks({
+        onCallRequest: callApiRequest,
+        canSend: !!id
+    });
 
 
     return (
@@ -228,7 +176,9 @@ export default function Home() {
                     <div className="flex text-[12px] rounded p-2">
                         <div ref={httpMethodRef} onClick={() => setDropdowns(prev => ({...prev, httpMethod: !dropdowns.httpMethod}))}
                              className="flex rounded-l relative items-center border border-r-0  text-green-400 cursor-pointer !bg-[#1c1c1e] border-zinc-800 py-1.5 px-5 pl-3 outline-none space-x-5">
-                            <div className={`font-bold ${methodColor}`}>{requestData.method}</div>
+                            <div className={`font-bold ${requestData.method
+                                ? methodColorMap[requestData.method] ?? "text-zinc-400"
+                                : "text-zinc-400"}`}>{requestData.method}</div>
                             {dropdowns.httpMethod &&
                                 <HttpMethodDropdown updateField={updateField} dropdowns={dropdowns}
                                                     setDropdowns={setDropdowns}/>}
@@ -268,7 +218,7 @@ export default function Home() {
                                 </div>
                             </div>
                             {requestData && requestData.params.map((data, key) => (
-                                <QueryParameterComponent key={key} index={key} deleteDict={deleteDict} updateDict={updateDict} data={data} />
+                                <QueryParameterComponent key={key} index={key} deleteDict={deleteDict} updateDict={updateDict} data={data} field="params" />
                             ))}
                         </>
                     )}
@@ -297,7 +247,7 @@ export default function Home() {
                                 </div>
                             </div>
                             {requestData && requestData.headers.map((data, key) => (
-                                <QueryParameterComponent key={key} index={key} deleteDict={deleteDict} updateDict={updateDict} data={data} />
+                                <QueryParameterComponent key={key} index={key} deleteDict={deleteDict} updateDict={updateDict} data={data} field="headers" />
                             ))}
                         </>
                     )}

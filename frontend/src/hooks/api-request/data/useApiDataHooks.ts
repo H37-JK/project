@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {useRef, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 import {ApiRequest, ApiRequestHistory, ApiRequestUpdate} from "@/constants/api";
 import useSWR, {useSWRConfig} from "swr";
 import {deleteFetcher, getFetcher, postFetcher, updateFetcher} from "@/lib/axios";
@@ -55,12 +55,15 @@ export function useApiDataHooks() {
     const [requestData, setRequestData] = useState<ApiRequestUpdate>(DEFAULT_DATA)
     const [historyData, setHistoryData] = useState<ApiRequestHistory>(DEFAULT_HISTORY)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
     const saveTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
     const latestIdRef = useRef<string | null>(null);
+    const latestRequestDataRef = useRef<ApiRequestUpdate>(DEFAULT_DATA)
 
     const { data: apis, isLoading: apisIsLoading, mutate: apisMutate } = useSWR<ApiRequest[]>(get_tab_active_api_requests_url, getFetcher)
     const { data: api, isLoading: apiIsLoading, mutate: apiMutate  } = useSWR<ApiRequest>(id ? `${get_api_request_url}/${id}` : null, getFetcher)
     const apiKey = id ? `${get_api_request_url}/${id}` : null;
+
 
     const { trigger: createTrigger, isMutating: createMutating } = useSWRMutation (
         create_api_request_url,
@@ -80,8 +83,8 @@ export function useApiDataHooks() {
         updateFetcher, {
             onSuccess: async() => {
                 await Promise.all([
-                    apisMutate(),
-                    apiKey ? globalMutate(apiKey) : Promise.resolve()
+                    await apisMutate(),
+                    await apiMutate()
                 ]);
             }
         }
@@ -134,18 +137,20 @@ export function useApiDataHooks() {
     }
 
     const callApiRequest = async() => {
+        const currentId = latestIdRef.current;
+        const currentRequestData = latestRequestDataRef.current;
         if (!id) return
         try {
             const data = {
-                id,
-                url: requestData.url,
-                method: requestData.method,
-                params: requestData.params,
-                headers: requestData.headers,
-                body_type: requestData.body_type,
-                body_content: requestData.body_content,
-                auth_type: requestData.auth_type,
-                auth_content: requestData.auth_content,
+                id: currentId,
+                url: currentRequestData.url,
+                method: currentRequestData.method,
+                params: currentRequestData.params,
+                headers: currentRequestData.headers,
+                body_type: currentRequestData.body_type,
+                body_content: currentRequestData.body_content,
+                auth_type: currentRequestData.auth_type,
+                auth_content: currentRequestData.auth_content,
             }
             const res: ApiRequestHistory = await callTrigger ({
                 data
@@ -190,7 +195,7 @@ export function useApiDataHooks() {
                 })
 
             } catch (error) {
-                await globalMutate(targetKey)
+                await apiMutate()
                 console.error(error)
             }
         }, 200)
@@ -241,6 +246,43 @@ export function useApiDataHooks() {
         if (id) persistUpdate(newData)
     }
 
+    useEffect(() => {
+        if (api) {
+            setRequestData({
+                id: api.id,
+                name: api.name,
+                method: api.method,
+                url: api.url,
+                headers: api.headers,
+                params: api.params,
+                body_type: api.body_type,
+                body_content: api.body_content,
+                auth_type: api.auth_type,
+                auth_content: api.auth_content,
+                tab_active: api.tab_active,
+                update_at: api.update_at,
+            })
+        }
+    }, [api]);
+
+    useEffect(() => {
+        latestIdRef.current = id;
+        if (saveTimerRef.current) {
+            window.clearTimeout(saveTimerRef.current);
+            saveTimerRef.current = null;
+        }
+    }, [id]);
+
+    useEffect(() => {
+        if (apis && apis.length > 0 && !id) {
+            setId(apis[apis.length - 1].id);
+        }
+    }, [apis, id]);
+
+    useEffect(() => {
+        latestRequestDataRef.current = requestData
+    }, [requestData]);
+
     const pretty = (() => {
         const body = historyData?.response_body;
         if (!body) return "";
@@ -261,7 +303,7 @@ export function useApiDataHooks() {
         apis, api, apisIsLoading, errorMessage,
         createApiRequest, deleteApiRequest, callApiRequest, callMutating,
         updateField, addDict, updateDict, deleteDict,
-        saveTimerRef, latestIdRef, pretty
+        saveTimerRef, latestIdRef, latestRequestDataRef, pretty
 
     }
 

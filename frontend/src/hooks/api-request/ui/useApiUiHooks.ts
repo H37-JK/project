@@ -1,7 +1,11 @@
 import {useEffect, RefObject, useState, useRef, useCallback} from 'react'
-import {useApiDataHooks} from "@/hooks/api/data/useApiDataHooks";
+import {useApiDataHooks} from "@/hooks/api-request/data/useApiDataHooks";
+import {requestIdleCallback} from "next/dist/client/request-idle-callback";
 
-
+interface ApiUiProps {
+    onCallRequest: () => void;
+    canSend: boolean;
+}
 
 export function useClickOutside(ref: RefObject<HTMLElement | null>, handler: () => void) {
     useEffect(() => {
@@ -16,8 +20,10 @@ export function useClickOutside(ref: RefObject<HTMLElement | null>, handler: () 
         return () => document.removeEventListener("pointerdown", listener, true);
     }, [ref, handler]);
 }
+
+
 export function useApiUIHooks() {
-    const { requestData } = useApiDataHooks()
+    const { requestData, latestRequestDataRef } = useApiDataHooks()
 
     const [activeTab, setActiveTab] = useState("파라미터")
     const tabs = ['파라미터', '본문', '헤더', '인증', '사전요청 스크립트']
@@ -31,23 +37,6 @@ export function useApiUIHooks() {
     const httpMethodRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const authRef = useRef<HTMLDivElement>(null);
-
-    const methodColorMap: Record<string, string> = {
-        GET: "text-emerald-400",
-        POST: "text-amber-500",
-        PUT: "text-sky-400",
-        PATCH: "text-purple-400",
-        DELETE: "text-red-500",
-        HEAD: "text-teal-400",
-        OPTIONS: "text-indigo-400",
-        CONNECT: "text-zinc-400",
-        TRACE: "text-zinc-400",
-        CUSTOM: "text-zinc-400",
-    };
-
-    const methodColor = requestData.method
-        ? methodColorMap[requestData.method] ?? "text-zinc-400"
-        : "text-zinc-400";
 
     const [dropdowns, setDropdowns] = useState({
         httpMethod: false,
@@ -75,6 +64,24 @@ export function useApiUIHooks() {
         setIsMenuToggle(!isMenuToggle)
     }
 
+    const closeHttpMethod = useCallback(() => {
+        setDropdowns(p => ({ ...p, httpMethod: false }));
+    }, []);
+
+    const closeContent = useCallback(() => {
+        setDropdowns(p => ({ ...p, content: false }));
+    }, []);
+
+
+    const closeAuth = useCallback(() => {
+        setDropdowns(p => ({ ...p, auth: false }));
+    }, []);
+
+    useClickOutside(httpMethodRef, closeHttpMethod);
+    useClickOutside(contentRef, closeContent);
+    useClickOutside(authRef, closeAuth);
+
+
     return {
         activeTab, setActiveTab, tabs,
         isShowAlert, setIsShowAlert,
@@ -83,6 +90,5 @@ export function useApiUIHooks() {
         isMenuToggle, setIsMenuToggle,
         httpMethodRef, contentRef, authRef,
         handleIsShowAlert, handleIsMenuToggle, closeDropdown,
-        methodColor
     };
 }
