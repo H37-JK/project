@@ -13,11 +13,9 @@ export default function AgentView() {
 
     useEffect(() => {
         if (!isStarted || sessionStatus !== "authenticated" || !session?.user?.id) {
-            console.log("⏳ 세션 로딩 중 또는 인증되지 않음...");
             return;
         }
-
-        const socketUrl = `ws://${process.env.SOCKET_URL}/ws/view/${session.user.id}`;
+        const socketUrl = `ws://${process.env.NEXT_PUBLIC_WEB_URL}/ws/view/${session.user.id}`;
         console.log("🔗 웹소켓 연결 시도:", socketUrl);
 
         const socket = new WebSocket(socketUrl);
