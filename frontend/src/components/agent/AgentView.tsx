@@ -17,7 +17,7 @@ export default function AgentView() {
             return;
         }
 
-        const socketUrl = `ws://localhost:8000/ws/view/${session.user.id}`;
+        const socketUrl = `ws://${process.env.SOCKET_URL}/ws/view/${session.user.id}`;
         console.log("🔗 웹소켓 연결 시도:", socketUrl);
 
         const socket = new WebSocket(socketUrl);
