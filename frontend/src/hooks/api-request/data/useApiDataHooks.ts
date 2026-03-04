@@ -56,7 +56,7 @@ export function useApiDataHooks() {
     const [id, setId] = useState<string | null>(null)
     const [file, setFile] = useState<string | null>(null)
     const [requestData, setRequestData] = useState<ApiRequestUpdate>(DEFAULT_DATA)
-    const [historyData, setHistoryData] = useState<ApiRequestHistory>(DEFAULT_HISTORY)
+    const [historyData, setHistoryData] = useState<ApiRequestHistory>()
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const saveTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
@@ -321,7 +321,7 @@ export function useApiDataHooks() {
                 e.target.value = '';
                 return;
             }
-            setFile(e.target.files?.[0])
+            // setFile(e.target.files?.[0])
             e.target.value = ''
         }
     }

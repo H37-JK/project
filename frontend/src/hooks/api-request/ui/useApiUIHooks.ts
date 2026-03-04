@@ -28,9 +28,9 @@ export function useApiUIHooks() {
     const [isMenuToggle, setIsMenuToggle] = useState(true)
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
-    const [selectedName, setSelectedName] = useState<string>(null)
+    const [selectedName, setSelectedName] = useState<string | null>(null)
     const [isShowAlert, setIsShowAlert] = useState<boolean>(false)
-    const [alertMessage, setAlertMessage] = useState<string>(null)
+    const [alertMessage, setAlertMessage] = useState<string | null>(null)
     const [showTrash, setShowTrash] = useState(false)
     const [selectedId, setSelectedId] = useState<string | null>(null)
 

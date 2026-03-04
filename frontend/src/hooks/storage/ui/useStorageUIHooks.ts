@@ -5,10 +5,10 @@ export function useStorageUIHooks() {
     const [isMenuToggle, setIsMenuToggle] = useState<boolean>(false)
     const [isSearchToggle, setIsSearchToggle] = useState<boolean>(false)
     const [isShowAlert, setIsShowAlert] = useState<boolean>(false)
-    const [alertMessage, setAlertMessage] = useState<string>(null)
+    const [alertMessage, setAlertMessage] = useState<string | null>(null)
     const [isFileToggle, setIsFileToggle] = useState<boolean>(true)
     const [showTrash, setShowTrash] = useState<boolean>(false)
-    const [searchValue, setSearchValue] = useState<string>(null)
+    const [searchValue, setSearchValue] = useState<string | null>(null)
     const fileRef = useRef<HTMLInputElement>(null)
 
     const handleRefresh = () => {

@@ -110,7 +110,7 @@ export default function Home() {
                                     <div className="absolute top-1 left-1">
                                         <IoSearchOutline className="h-3.5 w-3.5"/>
                                     </div>
-                                    <input value={searchValue} onChange={(e) => setSearchValue(e.target.value)}
+                                    <input value={searchValue!} onChange={(e) => setSearchValue(e.target.value)}
                                         className="outline outline-zinc-700 rounded-md py-0.5 pl-5 pr-5 focus:outline-zinc-600"
                                         type="text"/>
                                     <div onClick={() => {

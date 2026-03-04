@@ -83,7 +83,7 @@ export function useStorageDataHooks() {
         }
     }
 
-    const handleDownload = async (fileUrl, fileName) => {
+    const handleDownload = async (fileUrl: string, fileName: string) => {
         try {
             fileUrl = `${proxy_url}/${fileUrl.split('/')[fileUrl.split('/').length - 1]}`
             const response = await fetch(fileUrl);
