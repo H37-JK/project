@@ -15,74 +15,19 @@ import {CiTrash} from "react-icons/ci";
 import ConfirmModal from "@/components/modal/ConfirmModal";
 import ToolTipComponent from "@/components/tooltip/TooltipComponent";
 import SkeletonComponent from "@/components/skeleton/SkeletonComponent";
+import {useAgentUIHooks} from "@/hooks/agent/ui/useAgentUIHooks";
+import {useAgentDataHooks} from "@/hooks/agent/data/useAgentDataHooks";
+import {useUIHooks} from "@/hooks/common/ui/useUIHooks";
 
 
 export default function Home() {
-    const {data: session} = useSession()
-    const [showTrash, setShowTrash] = useState(false)
-    const [prompt, setPrompt] = useState('')
-    const [isMenuToggle, setIsMenuToggle] = useState(true)
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedId, setSelectedId] = useState<string | null>(null);
-    const {isStarted, setIsStarted} = AgentStore()
 
-    const handleIsMenuToggle = () => {
-        setIsMenuToggle(!isMenuToggle)
-    }
-
-    const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault()
-            await createAgent()
-        }
-    }
-
-    const {data: agents, isLoading, mutate} = useSWR<Agent[]>('/get/agents', getFetcher)
-
-    const {trigger: createTrigger, isMutating: createMutating} = useSWRMutation(
-        '/create/agent',
-        postFetcher, {
-            onSuccess: () => mutate()
-        }
-    )
-
-    const {trigger: deleteTrigger, isMutating: deleteMutating} = useSWRMutation(
-        '/delete/agent',
-        deleteFetcher, {
-            onSuccess: () => mutate()
-        }
-    )
-
-    const createAgent = async () => {
-        if (!session?.user.accessToken) return
-        try {
-            const data = {
-                prompt
-            }
-            setPrompt('')
-            setIsStarted(true)
-            await createTrigger({
-                data
-            })
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    const deleteAgent = async (id: string) => {
-        try {
-            await deleteTrigger(id)
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    const handleDeleteClick = (id: string) => {
-        setSelectedId(id);
-        setIsModalOpen(true);
-    };
-
-
+    const {showTrash, setShowTrash, isMenuToggle, setIsMenuToggle, isModalOpen, setIsModalOpen, selectedId, setSelectedId, handleIsMenuToggle, handleKeyDown, handleDeleteClick} = useAgentUIHooks()
+    const {prompt, setPrompt, agents, createAgent, deleteAgent, isLoading} = useAgentDataHooks()
+    useUIHooks({
+        onCallRequest: createAgent,
+        canSend: !!prompt
+    });
     return (
         <div className="flex flex-1 overflow-hidden pl-0 md:pl-10">
 
@@ -165,7 +110,9 @@ export default function Home() {
                         <div className="absolute right-5 top-1.5">
                             <div className="flex items-center">
                                 <div className="text-sm flex items-center space-x-3">
-                                    <button onClick={() => createAgent()} type="button"
+                                    <button onClick={async () => {
+                                        await createAgent()
+                                    }} type="button"
                                             className="cursor-pointer rounded-xl bg-zinc-800 opacity-90 px-3 py-2 flex items-center space-x-2">
                                         <div>실행</div>
                                         <div

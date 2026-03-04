@@ -35,7 +35,7 @@ from fastapi import Request
 warnings.filterwarnings("ignore", category=UserWarning, message="pkg_resources is deprecated as an API.")
 
 origins = [
-    "*"
+    "http://localhost:3000"
 ]
 
 @asynccontextmanager
@@ -47,19 +47,19 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan = lifespan, route_class = LoggingRoute)
 
 app.add_middleware (
-    CORSMiddleware, # type: ignore
-    allow_origins = origins,
-    allow_credentials = True,
-    allow_methods = ["*"],
-    allow_headers = ["*"]
-)
-
-app.add_middleware (
     SessionMiddleware, # type: ignore
     secret_key = os.getenv("SECRET_KEY"),
     same_site="lax",
     https_only = False
 )
+
+app.add_middleware (
+    CORSMiddleware, # type: ignore
+    allow_origins = origins,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
+
 
 app.include_router(user.router)
 app.include_router(api_request.router)

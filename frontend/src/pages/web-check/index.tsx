@@ -1,6 +1,6 @@
+import React from "react";
 import WebAnalyzeComponent from "@/components/web-analyze/WebAnalyzeComponent";
 import {useWebAnalyzeDataHooks} from "@/hooks/web-analyze/data/useWebAnalyzeDataHooks";
-import React from "react";
 import {useWebAnalyzeUIHooks} from "@/hooks/web-analyze/ui/useWebAnalyzeUIHooks";
 import {useUIHooks} from "@/hooks/common/ui/useUIHooks";
 
