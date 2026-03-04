@@ -243,7 +243,7 @@ export default function Home() {
                 message="삭제된 API는 복구가 불가능 합니다."
                 onCancel={() => setIsModalOpen(false)}
                 onConfirm={async () => {
-                    await deleteApiRequest(id);
+                    await deleteApiRequest(id!);
                 }}
             />
 
@@ -270,7 +270,7 @@ export default function Home() {
                     {/*<span>변경할 이름을 입력해 주세요.</span>*/}
                     {/*</div>*/}
                     <input
-                        value={selectedName}
+                        value={selectedName!}
                         onChange={(e) => setSelectedName(e.target.value)}
                         type="text"
                         placeholder="변경할 이름을 입력해 주세요"
@@ -383,29 +383,29 @@ export default function Home() {
                                 <CodeEditor body_content={requestData!.body_content!} updateField={updateField}/>
                             ) : requestData && requestData.body_type === 'multipart/form-data' ? (
                                 <div className="flex">
-                                    <input type="text" placeholder="키"
-                                           className="outline-none basis-9/27 border-r py-2 px-3 border-b border-zinc-800"/>
-                                    <input type="text" placeholder="값" value={file ? file.name : ''}
-                                           className="outline-none basis-9/27 border-r py-2 px-3 border-b border-zinc-800"/>
-                                    <div
-                                        type="button"
-                                        onClick={handleButtonClick}
-                                        className="relative group flex items-center  outline-none basis-9/27 border-r py-2 px-3 border-b border-zinc-800 cursor-pointer"
-                                    >
-                                        <div
-                                            className="bg-zinc-800 py-0.5 px-2 mr-1 !text-[11px] text-zinc-400 rounded-sm font-bold bg-zinc-900 group-hover:bg-zinc-800">파일선택
-                                        </div>
-                                        <div
-                                            className="text-[11px] text-zinc-400 font-bold group-hover:text-zinc-500">{file ? file.name : '파일이 선택되지 않았습니다.'}</div>
-                                    </div>
+                                    {/*<input type="text" placeholder="키"*/}
+                                    {/*       className="outline-none basis-9/27 border-r py-2 px-3 border-b border-zinc-800"/>*/}
+                                    {/*<input type="text" placeholder="값" value={file ? file.name! : ''}*/}
+                                    {/*       className="outline-none basis-9/27 border-r py-2 px-3 border-b border-zinc-800"/>*/}
+                                    {/*<div*/}
+                                    {/*    type="button"*/}
+                                    {/*    onClick={handleButtonClick}*/}
+                                    {/*    className="relative group flex items-center  outline-none basis-9/27 border-r py-2 px-3 border-b border-zinc-800 cursor-pointer"*/}
+                                    {/*>*/}
+                                    {/*    <div*/}
+                                    {/*        className="bg-zinc-800 py-0.5 px-2 mr-1 !text-[11px] text-zinc-400 rounded-sm font-bold bg-zinc-900 group-hover:bg-zinc-800">파일선택*/}
+                                    {/*    </div>*/}
+                                    {/*    <div*/}
+                                    {/*        className="text-[11px] text-zinc-400 font-bold group-hover:text-zinc-500">{file ? file.name : '파일이 선택되지 않았습니다.'}</div>*/}
+                                    {/*</div>*/}
 
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={(e) => handleFileOnChange(e)}
-                                        style={{display: 'none'}}
-                                        accept="image/*, video/*"
-                                    />
+                                    {/*<input*/}
+                                    {/*    type="file"*/}
+                                    {/*    ref={fileInputRef}*/}
+                                    {/*    onChange={(e) => handleFileOnChange(e)}*/}
+                                    {/*    style={{display: 'none'}}*/}
+                                    {/*    accept="image/*, video/*"*/}
+                                    {/*/>*/}
 
                                 </div>
                             ) : (

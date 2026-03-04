@@ -34,47 +34,6 @@ services:
     networks:
       - app-network
 
-  backend:
-    build: ../backend
-    container_name: backend
-    restart: always
-    environment:
-      - DATABASE_URL=postgresql://hjk:star8903@db:5432/postgres
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_URL=redis://redis:6379/0
-      - TZ=Asia/Seoul
-    ports:
-      - "8001:8000"
-    volumes:
-      - ../backend:/backend
-      - /backend/.venv
-    depends_on:
-      - db
-    networks:
-      - app-network
-    labels:
-      - "logging=promtail"
-
-  frontend:
-    build: ../frontend
-    container_name: frontend
-    restart: always
-    ports:
-      - "3001:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8001
-    volumes:
-      - ../frontend:/app
-      - /app/node_modules
-      - /app/.next
-    depends_on:
-      - backend
-    networks:
-      - app-network
-    labels:
-      - "logging=promtail"
-
   loki:
     image: grafana/loki:2.9.0
     container_name: loki

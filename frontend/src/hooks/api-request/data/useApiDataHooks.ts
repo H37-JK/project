@@ -33,7 +33,8 @@ const DEFAULT_HISTORY = {
     response_size: null,
     response_body: null,
     response_headers: null,
-    error_message: null
+    error_message: null,
+    api_request_id: null,
 }
 
 const newDict = {
@@ -56,7 +57,7 @@ export function useApiDataHooks() {
     const [id, setId] = useState<string | null>(null)
     const [file, setFile] = useState<string | null>(null)
     const [requestData, setRequestData] = useState<ApiRequestUpdate>(DEFAULT_DATA)
-    const [historyData, setHistoryData] = useState<ApiRequestHistory>()
+    const [historyData, setHistoryData] = useState<ApiRequestHistory>(DEFAULT_HISTORY)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const saveTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
@@ -118,7 +119,8 @@ export function useApiDataHooks() {
             onSuccess: async () => {
                 await Promise.all([
                     apisMutate(),
-                    apiMutate()
+                    apiMutate(),
+                    historiesMutate()
                 ]);
             }
         }

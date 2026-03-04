@@ -8,8 +8,8 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     children: React.ReactNode;
-    selectedId: string,
-    selectedName: string
+    selectedId: string | null,
+    selectedName: string | null
     updateField: () => void
 }
 
