@@ -1,6 +1,7 @@
 import urllib
 
 from authlib.integrations.starlette_client import OAuth
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, APIRouter, Response, HTTPException
 import os
 
@@ -14,7 +15,12 @@ from backend.model.api.api_request import ApiRequestCreate
 from backend.passlib.jwt_token import create_access_token
 from backend.routers.api.api_request import get_api_requests
 from backend.schemas.token import Token
-GOOGLE_REDIRECT_URI = "http://localhost:8000/auth/callback/google"
+
+load_dotenv()
+host = os.getenv("HOST_URL", "http://localhost:8000")
+front = os.getenv("FRONT_URL", "http://localhost:3000")
+GOOGLE_REDIRECT_URI = f"{host}/auth/callback/google"
+
 
 router = APIRouter (
     tags = ["auth"],
@@ -47,7 +53,7 @@ async def auth (
     try:
         token = await oauth.google.authorize_access_token(request)
     except Exception as e:
-        return RedirectResponse(url="http://localhost:3000/login?error=google_auth_failed")
+        return RedirectResponse(url=f"{front}/login?error=google_auth_failed")
 
     user_info = token.get("userinfo")
 
@@ -110,7 +116,7 @@ async def auth (
     data = {"id": user.id}
     access_token = create_access_token(data)
 
-    base_url = "http://localhost:3000/auth/google/callback"
+    base_url = f"{front}/auth/google/callback"
     params = {
         "access_token": access_token,
         "email": user.email,

@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 from uuid import UUID
 
+from dotenv import load_dotenv
 from fastapi import APIRouter, UploadFile, Depends, HTTPException
 from sqlmodel import select
 
@@ -21,8 +22,12 @@ router = APIRouter (
     route_class = LoggingRoute,
 )
 
+load_dotenv()
+host = os.getenv("HOST_URL", "http://localhost:8000")
+GOOGLE_REDIRECT_URI = f"{host}/auth/callback/google"
+
 UPLOAD_DIR = "uploads"
-BASEURL = "http://localhost:8000/files"
+BASEURL = f"{host}/files"
 
 @router.get("/get/files")
 async def get_files (

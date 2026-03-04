@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/proxy/:path*',
-        destination: 'http://localhost:8000/files/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/files/:path*`,
       },
     ]
   },
