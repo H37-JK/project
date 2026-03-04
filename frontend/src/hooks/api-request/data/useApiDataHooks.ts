@@ -1,10 +1,11 @@
 import axios from 'axios'
-import {useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {ApiRequest, ApiRequestHistory, ApiRequestUpdate} from "@/constants/api";
 import useSWR, {useSWRConfig} from "swr";
 import {deleteFetcher, getFetcher, postFetcher, updateFetcher} from "@/lib/axios";
 import useSWRMutation from "swr/mutation";
 import {formatBytesToHumanReadable} from "@/lib/file";
+import {useApiUIHooks} from "@/hooks/api-request/ui/useApiUIHooks";
 
 const DEFAULT_DATA = {
     id: null,
@@ -48,21 +49,28 @@ const delete_api_request_url = '/delete/api-request'
 const call_api_request_url   = '/call/api-request'
 const get_tab_active_api_requests_url = '/get/tab-active-api-requests'
 const get_api_request_url    = '/get/api-request'
+const get_api_requests_histories_url = '/get/api-requests-histories'
 
 export function useApiDataHooks() {
     const {mutate: globalMutate} = useSWRConfig();
     const [id, setId] = useState<string | null>(null)
+    const [file, setFile] = useState<string | null>(null)
     const [requestData, setRequestData] = useState<ApiRequestUpdate>(DEFAULT_DATA)
     const [historyData, setHistoryData] = useState<ApiRequestHistory>(DEFAULT_HISTORY)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const saveTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
     const latestIdRef = useRef<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+
     const latestRequestDataRef = useRef<ApiRequestUpdate>(DEFAULT_DATA)
 
     const { data: apis, isLoading: apisIsLoading, mutate: apisMutate } = useSWR<ApiRequest[]>(get_tab_active_api_requests_url, getFetcher)
     const { data: api, isLoading: apiIsLoading, mutate: apiMutate  } = useSWR<ApiRequest>(id ? `${get_api_request_url}/${id}` : null, getFetcher)
-    const apiKey = id ? `${get_api_request_url}/${id}` : null;
+
+    const { data: histories, isLoading: historiesLoading, mutate: historiesMutate } = useSWR<ApiRequestHistory[]>(get_api_requests_histories_url, getFetcher)
+
 
 
     const { trigger: createTrigger, isMutating: createMutating } = useSWRMutation (
@@ -127,7 +135,7 @@ export function useApiDataHooks() {
         }
     }
 
-    const deleteApiRequest = async() => {
+    const deleteApiRequest = async(id: string) => {
         if (!id) return
         try {
             await deleteTrigger(id)
@@ -172,13 +180,12 @@ export function useApiDataHooks() {
         }
     }
 
-    const persistUpdate = (newData: ApiRequestUpdate) => {
+    const persistUpdate = (newData: ApiRequestUpdate, selectedId = id) => {
         if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         saveTimerRef.current = window.setTimeout(async () => {
-            if (latestIdRef.current !== id) return
             const targetKey = `${get_api_request_url}/${id}`
             try {
                 await globalMutate(
@@ -190,9 +197,10 @@ export function useApiDataHooks() {
                     {revalidate: false}
                 )
                 await updateTrigger({
-                    id,
+                    id: selectedId,
                     data: newData
                 })
+                console.log(id)
 
             } catch (error) {
                 await apiMutate()
@@ -201,10 +209,15 @@ export function useApiDataHooks() {
         }, 200)
     }
 
-    const updateField = async (key: keyof ApiRequestUpdate, value: any) => {
+    const updateField = async (key: keyof ApiRequestUpdate, value: any, selectedId = id) => {
+        if (key === 'auth_content') {
+            value = {
+                'token': value
+            }
+        }
         const newData = {...requestData, [key]: value}
         setRequestData(newData)
-        if (id) persistUpdate(newData)
+        if (selectedId) persistUpdate(newData, selectedId)
     }
 
     const addDict = async (field: 'params' | 'headers') => {
@@ -296,11 +309,29 @@ export function useApiDataHooks() {
         }
     })();
 
+    const handleButtonClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileOnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log(e.target.files?.[0])
+        if (e.target.files?.[0]) {
+            if (!e.target.files?.[0].type.startsWith('image/') && !e.target.files?.[0].type.startsWith('video/')) {
+                alert('이미지 또는 비디오 파일만 업로드 가능합니다.');
+                e.target.value = '';
+                return;
+            }
+            setFile(e.target.files?.[0])
+            e.target.value = ''
+        }
+    }
+
     return {
         id, setId,
+        file, setFile, handleButtonClick, handleFileOnChange, fileInputRef,
         requestData, setRequestData,
         historyData, setHistoryData,
-        apis, api, apisIsLoading, errorMessage,
+        apis, api, apisIsLoading, errorMessage, histories, historiesLoading,
         createApiRequest, deleteApiRequest, callApiRequest, callMutating,
         updateField, addDict, updateDict, deleteDict,
         saveTimerRef, latestIdRef, latestRequestDataRef, pretty

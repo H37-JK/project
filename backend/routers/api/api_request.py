@@ -1,4 +1,5 @@
 import json
+import mimetypes
 from uuid import UUID
 
 import httpx
@@ -78,12 +79,30 @@ async def call_api_request (
     headers = build_options(api_request_call.headers)
     params = build_options(api_request_call.params)
 
+    if hasattr(api_request_call, 'auth_type') and api_request_call.auth_type == "Bearer":
+        headers["Authorization"] = f"Bearer {api_request_call.auth_content['token']}"
+
     request_args = {}
     if api_request_call.method != "GET":
        if api_request_call.body_type == "application/json":
           request_args["json"] = json.loads(api_request_call.body_content)
        elif api_request_call.body_type == "x-www-form-urlencoded":
           request_args["data"] = api_request_call.body_content
+       elif api_request_call.body_type == "multipart/form-data":
+          form_data = {}
+          files = []
+          body_parts = json.loads(api_request_call.body_content)
+          for part in body_parts:
+              if part.get("type") == "file":
+                  file_path = part.get("value")
+                  file_name = file_path.split("/")[-1]
+                  mime_type, _ = mimetypes.guess_type(file_path)
+                  f = open(file_path, "rb")
+                  files.append((part.get("key"), (file_name, f, mime_type)))
+              else:
+                  form_data[part.get("key")] = part.get("value")
+          request_args["data"] = form_data
+          request_args["files"] = files
 
     start_time = get_utc_now()
     response: httpx.Response | None = None

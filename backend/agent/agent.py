@@ -1,9 +1,12 @@
 import base64
+import shutil
 import time
 import json
 import re
 import os
 import sys, asyncio
+import uuid
+
 from playwright.async_api import async_playwright
 import google.generativeai as genai
 from PIL import Image
@@ -143,7 +146,9 @@ async def capture(page, websocket):
     return screenshot_path
 
 async def run_browser_agent(prompt, websocket: WebSocket = None):
-    user_data_dir = "./user_data"
+    session_id = str(uuid.uuid4())
+    user_data_dir = f"./user_data/{session_id}"
+    os.makedirs(user_data_dir, exist_ok=True)
     history = []
     result = "failed"
     async with async_playwright() as p:
@@ -239,6 +244,8 @@ async def run_browser_agent(prompt, websocket: WebSocket = None):
                   print(f"소켓 종료 중 에러: {e}")
 
       await browser.close()
+      if os.path.exists(user_data_dir):
+          shutil.rmtree(user_data_dir)
     return {
         "result": result,
         "history": history

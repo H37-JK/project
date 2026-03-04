@@ -16,21 +16,16 @@ const contentTypes = [
     {
         group: 'Text',
         items: [
-            'application/json',
-            'application/ld+json',
-            'application/hal+json',
-            'application/vnd.api+json',
-            'application/xml',
-            'text/xml',
+                'application/json',
         ],
     },
-    {
-        group: 'Structured',
-        items: [
-            'application/x-www-form-urlencoded'
-            ,'multipart/form-data'
-        ],
-    },
+    // {
+    //     group: 'Structured',
+    //     items: [
+    //          'x-www-form-urlencoded'
+    //         ,'multipart/form-data'
+    //     ],
+    // },
 ]
 
 const ContentTypeDropdown = ({dropdowns, setDropdowns, updateField, selected}: contentTypeDropDownProps) => {

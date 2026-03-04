@@ -81,7 +81,6 @@ export function useStorageDataHooks() {
             await fileUploadRequest(file)
             e.target.value = ''
         }
-
     }
 
     const handleDownload = async (fileUrl, fileName) => {

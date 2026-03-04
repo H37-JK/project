@@ -19,15 +19,19 @@ export function useClickOutside(ref: RefObject<HTMLElement | null>, handler: () 
 
 
 export function useApiUIHooks() {
-    const { requestData, latestRequestDataRef } = useApiDataHooks()
+
+    const [activeMenu, setActiveMenu] = useState('api')
 
     const [activeTab, setActiveTab] = useState("파라미터")
-    const tabs = ['파라미터', '본문', '헤더', '인증', '사전요청 스크립트']
+    const tabs = ['파라미터', '본문', '헤더', '인증']
 
     const [isMenuToggle, setIsMenuToggle] = useState(true)
-    const [isShowAlert, setIsShowAlert] = useState(false)
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+    const [selectedName, setSelectedName] = useState<string>(null)
+    const [isShowAlert, setIsShowAlert] = useState<boolean>(false)
+    const [alertMessage, setAlertMessage] = useState<string>(null)
     const [showTrash, setShowTrash] = useState(false)
-    const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedId, setSelectedId] = useState<string | null>(null)
 
     const httpMethodRef = useRef<HTMLDivElement>(null);
@@ -53,7 +57,7 @@ export function useApiUIHooks() {
 
         setTimeout(() => {
             setIsShowAlert(false)
-        }, 1500)
+        }, 2000)
     }
 
     const handleIsMenuToggle = () => {
@@ -73,17 +77,28 @@ export function useApiUIHooks() {
         setDropdowns(p => ({ ...p, auth: false }));
     }, []);
 
+    const handleDeleteClick = () => {
+        setIsModalOpen(true);
+    };
+
+
     useClickOutside(httpMethodRef, closeHttpMethod);
     useClickOutside(contentRef, closeContent);
     useClickOutside(authRef, closeAuth);
 
 
     return {
+        activeMenu, setActiveMenu,
         activeTab, setActiveTab, tabs,
         isShowAlert, setIsShowAlert,
         showTrash, setShowTrash,
+        alertMessage, setAlertMessage,
+        editModalOpen, setEditModalOpen,
+        selectedId, setSelectedId,
+        selectedName, setSelectedName,
         dropdowns, setDropdowns, toggleDropdown,
-        isMenuToggle, setIsMenuToggle,
+        isMenuToggle, setIsMenuToggle, handleDeleteClick,
+        isModalOpen, setIsModalOpen,
         httpMethodRef, contentRef, authRef,
         handleIsShowAlert, handleIsMenuToggle, closeDropdown,
     };

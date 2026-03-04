@@ -45,4 +45,5 @@ export interface ApiRequestHistory {
     response_body: Record<string, any>[] | null
     response_headers: Record<string, any>[] | null
     error_message: Record<string, any> | null
+    api_request_id: string
 }

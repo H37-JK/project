@@ -23,7 +23,8 @@ import {useUIHooks} from "@/hooks/common/ui/useUIHooks";
 export default function Home() {
 
     const {showTrash, setShowTrash, isMenuToggle, setIsMenuToggle, isModalOpen, setIsModalOpen, selectedId, setSelectedId, handleIsMenuToggle, handleKeyDown, handleDeleteClick} = useAgentUIHooks()
-    const {prompt, setPrompt, agents, createAgent, deleteAgent, isLoading} = useAgentDataHooks()
+    const {prompt, setPrompt, agents, isShowAlert, alertMessage, createAgent, deleteAgent, isLoading} = useAgentDataHooks()
+    const {isStarted, setIsStarted} = AgentStore()
     useUIHooks({
         onCallRequest: createAgent,
         canSend: !!prompt
@@ -63,13 +64,13 @@ export default function Home() {
                     {agents && agents.map((data, key) => (
                         <div key={key}
                              className="flex group items-center cursor-pointer border-b border-zinc-800 hover:bg-zinc-800 p-3.5 py-1.5 gap-2 text-md w-full">
-                            <div className="flex-shrink-0">
-                                <IoLogoChrome className="h-4 w-4 fill-gray-400 group-hover:fill-white"/>
-                            </div>
+                            {/*<div className="flex-shrink-0">*/}
+                                {/*<IoLogoChrome className="h-4 w-4 fill-gray-400 group-hover:fill-white"/>*/}
+                            {/*</div>*/}
 
                             <div className="relative flex-1 min-w-0 group/text hover:z-[50]">
                                 <div className="text-zinc-300 group-hover:text-white truncate">
-                                    {data.prompt}
+                                    {data.result === '성공' ? '🟢' : '❌'} {data.prompt}
                                 </div>
 
                                 <ToolTipComponent data={data.prompt} isFirst={key === 0}/>
@@ -112,7 +113,7 @@ export default function Home() {
                                 <div className="text-sm flex items-center space-x-3">
                                     <button onClick={async () => {
                                         await createAgent()
-                                    }} type="button"
+                                    }} type="button" disabled={isStarted}
                                             className="cursor-pointer rounded-xl bg-zinc-800 opacity-90 px-3 py-2 flex items-center space-x-2">
                                         <div>실행</div>
                                         <div
@@ -124,6 +125,14 @@ export default function Home() {
                         </div>
                     </div>
                 </div>
+
+                {isShowAlert &&
+                    <div className="absolute right-6 bottom-6">
+                        <div className="bg-green-400 px-4 py-1.5 rounded-md text-white font-bold text-sm">
+                            {alertMessage}
+                        </div>
+                    </div>
+                }
 
             </div>
         </div>

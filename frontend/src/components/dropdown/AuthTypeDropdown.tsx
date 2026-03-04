@@ -12,8 +12,7 @@ interface contentTypeDropDownProps {
 }
 
 const authOptions = [
-    "None", "Basic Auth",
-    "Bearer", "OAuth 2.0", "JWT"
+    "None", "Bearer",
 ];
 
 const AuthTypeDropdown = ({dropdowns, setDropdowns, updateField, selected}: contentTypeDropDownProps) => {

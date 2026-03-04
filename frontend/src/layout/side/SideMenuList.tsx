@@ -100,18 +100,18 @@ const SideMenuList = () => {
             {/*        </div>*/}
             {/*    </div>*/}
             {/*</Link>*/}
-            <Link href="/ai">
-                <div
-                    className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">
-                    <div>
-                        <TbMessageChatbotFilled
-                            className="h-5 w-5 text-[rgb(137,137,137)] cursor-pointer group-hover:text-zinc-200"/>
-                    </div>
-                    <div className="hidden group-hover:flex whitespace-nowrap">
-                        AI
-                    </div>
-                </div>
-            </Link>
+            {/*<Link href="/ai">*/}
+            {/*    <div*/}
+            {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
+            {/*        <div>*/}
+            {/*            <TbMessageChatbotFilled*/}
+            {/*                className="h-5 w-5 text-[rgb(137,137,137)] cursor-pointer group-hover:text-zinc-200"/>*/}
+            {/*        </div>*/}
+            {/*        <div className="hidden group-hover:flex whitespace-nowrap">*/}
+            {/*            AI*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</Link>*/}
             {/*<Link href="/storage" prefetch={false}>*/}
             {/*    <div*/}
             {/*        className="p-2 hover:bg-zinc-800 rounded group cursor-pointer flex items-center text-sm text-zinc-200 space-x-2">*/}
