@@ -156,12 +156,14 @@ export default function Home() {
                                         }} className="flex-shrink-0 flex justify-end">
                                             <MdModeEditOutline className="h-4 w-4 text-gray-400 group-hover:text-gray-300"/>
                                         </div>
-                                        <div onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteClick();
-                                        }} className="flex-shrink-0 flex justify-end">
-                                            <CiTrash className="h-4 w-4 fill-rose-400 group-hover:fill-red-500"/>
-                                        </div>
+                                        {data.is_deletable && (
+                                            <div onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteClick();
+                                            }} className="flex-shrink-0 flex justify-end">
+                                                <CiTrash className="h-4 w-4 fill-rose-400 group-hover:fill-red-500"/>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
