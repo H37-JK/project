@@ -35,7 +35,7 @@ from fastapi import Request
 warnings.filterwarnings("ignore", category=UserWarning, message="pkg_resources is deprecated as an API.")
 
 origins = [
-    "http://localhost:3000"
+    "*"
 ]
 
 @asynccontextmanager
