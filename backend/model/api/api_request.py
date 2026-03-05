@@ -13,7 +13,7 @@ from backend.model.user.user import User
 class ApiRequest(SQLModel, table = True):
     __tablename__ = "api_request"
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    name: str = Field(default = "Untitled", max_length = 100)
+    name: str = Field(default = "Untitled", max_length = 255)
     method: str = Field(default = "GET", index = True, max_length = 50)
     url: str | None = Field(default = None)
     headers: List[Dict[str, Any]] = Field(default_factory = list, sa_column = Column(JSONB))
@@ -33,7 +33,7 @@ class ApiRequest(SQLModel, table = True):
     update_at: datetime  = Field(default_factory = get_utc_now)
 
 class ApiRequestCreate(SQLModel):
-    name: str = Field(default = "Untitled", max_length = 50)
+    name: str = Field(default = "Untitled", max_length = 255)
     auth_type: str = Field(default = "None")
 
 
