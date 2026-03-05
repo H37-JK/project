@@ -63,20 +63,3 @@ fastapi dev main.py --host 0.0.0.0
 cd frontend
 npm run dev
 ```
-
-## 📊 Sample Reports
-
-Sample penetration test reports from industry-standard vulnerable applications:
-
-#### 🧃 **OWASP Juice Shop** • [GitHub](https://github.com/juice-shop/juice-shop)
-
-*A notoriously insecure web application maintained by OWASP, designed to test a tool's ability to uncover a wide range of modern vulnerabilities.*
-
-**Results**: Identified over 20 vulnerabilities across targeted OWASP categories in a single automated run.
-
-**Notable findings**:
-
-- Authentication bypass and full user database exfiltration via SQL injection
-- Privilege escalation to administrator through registration workflow bypass
-- IDOR vulnerabilities enabling access to other users' data and shopping carts
-- SSRF enabling internal network reconnaissance
