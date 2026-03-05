@@ -155,11 +155,15 @@ async def run_browser_agent(prompt, websocket: WebSocket = None):
       try:
         browser = await p.chromium.launch_persistent_context(
             user_data_dir,
-            headless = False,
-            channel = "chrome",
-            args = [
+            headless=True,
+            channel="chrome",
+            viewport={"width": 1280, "height": 800},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36", # 유저 에이전트 추가
+            args=[
                 "--disable-blink-features=AutomationControlled",
-                "--no-sandbox"
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--window-size=1280,800"
             ]
         )
         page = await browser.new_page()
@@ -212,7 +216,7 @@ async def run_browser_agent(prompt, websocket: WebSocket = None):
                 if index < len(visible_elements):
                     print(f"⌨️ {index}번 요소에 '{text}' 입력")
                     await visible_elements[index].click()
-                    pyperclip.copy(text)
+                    await visible_elements[index].fill(text)
                     await page.keyboard.press("Control+v")
                     # await visible_elements[index].fill(text)
                     history.append(f"{index}번 요소에 {text} 입력")
@@ -268,10 +272,3 @@ def agent_worker_thread(prompt: str, websocket):
 
 
 
-if __name__ == "__main__":
-    prompt1 = "네이버로 가서 아이디 these9907, 비밀번호 star8903!!??로 로그인 해줘"
-    prompt2 = "구글로 가서 고양이 검색해서 아무 고양이 하나 이미지 다운 받아줘"
-    prompt3 = "네이버로 이동해서 아이디 these9907, 비밀번호 star8903!!??로 로그인후 풍월량 공식 카페로 이동한 후, 아무 글이나 하나 작성해줘"
-    prompt4 = "유튜브로가서 these990703, star8903로 로그인하고 풍월량 공포 아무거나 틀어줘"
-
-    asyncio.run(run_browser_agent(prompt3))
