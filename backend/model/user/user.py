@@ -41,7 +41,7 @@ def validate_name(value: str) -> str:
 
 nameStr = Annotated [
     str,
-    Field(min_length = 2, max_length = 10),
+    Field(min_length = 2, max_length = 100),
     AfterValidator(validate_name)
 ]
 
@@ -49,7 +49,7 @@ nameStr = Annotated [
 
 class User(SQLModel, table = True):
     id: UUID = Field(default_factory = uuid4, primary_key = True)
-    email: EmailStr = Field(index = True, unique = True, max_length = 50)
+    email: EmailStr = Field(index = True, unique = True, max_length = 255)
     password: passwordStr | None = Field(default = None)
     name: nameStr = Field(unique = True)
     provider: str | None = Field(default = None)
@@ -71,7 +71,7 @@ class User(SQLModel, table = True):
 
 
 class UserCreate(SQLModel):
-    email: EmailStr = Field(max_length = 50)
+    email: EmailStr = Field(max_length = 255)
     password: passwordStr
     name: nameStr
 
@@ -85,7 +85,7 @@ class UserCreateResponse(SQLModel):
 
 
 class UserUpdate(SQLModel):
-    email: EmailStr | None = Field(default = None, max_length = 50)
+    email: EmailStr | None = Field(default = None, max_length = 255)
     password: passwordStr | None = Field(default = None)
     name: nameStr | None = Field(default = None)
 
