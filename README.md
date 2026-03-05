@@ -26,7 +26,7 @@
 
 ## 🧰 스토리지
 
-![storage](assets/file.gif)
+![storage](assets/storage.gif)
 
 
 ## 📦 기술 스택
