@@ -1,2 +1,1 @@
-<video src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" width="600" controls autoplay muted loop>
-</video>
+[![서비스 소개 영상]([http://img.youtube.com/vi/유튜브비디오ID/0.jpg](http://h37-project.duckdns.org:8000/files/3cba83a4-8ac3-4cf2-a919-17ba63a59648.mp4))]([https://www.youtube.com/watch?v=유튜브비디오ID](http://h37-project.duckdns.org:8000/files/3cba83a4-8ac3-4cf2-a919-17ba63a59648.mp4))
